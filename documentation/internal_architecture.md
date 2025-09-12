@@ -1,50 +1,104 @@
 # Internal architecture
 
-The Prometheus server consists of many internal components that work together in concert to achieve Prometheus's overall functionality. This document provides an overview of the major components, including how they fit together and pointers to implementation details. If you are a developer who is new to Prometheus and wants to get an overview of all its pieces, start here.
+* Prometheus server
+  * == MULTIPLE internal components / work together
+  * ' architecture
 
-The overall Prometheus server architecture is shown in this diagram:
-
-![Prometheus server architecture](images/internal_architecture.svg)
-
-**NOTE**: Arrows indicate request or connection initiation direction, not necessarily dataflow direction.
-
-The sections below will explain each component in the diagram. Code links and explanations are based on Prometheus version 2.3.1. Future Prometheus versions may differ.
+    ![Prometheus server architecture](images/internal_architecture.svg)
+    * arrows
+      * == request OR connection initiation direction
+        * != dataflow direction
 
 ## Main function
 
-The [`main()` function](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L77-L600) initializes and runs all other Prometheus server components. It also connects interdependent components to each other.
+* [`main()` function](/prometheus/cmd/prometheus/main.go)
+  * ' goal
+    * initializes & runs ALL OTHER Prometheus server components
+    * connects interdependent components -- to -- EACH OTHER
+  * steps
+    * server's CL flags are defined & parsed -- into a -- [local configuration structure](/prometheus/cmd/prometheus/main.go)
+      * != configuration / later read -- from a -- configuration file
+        * _Example:_ provided -- by the -- `--config.file` flag 
+    * sanitize & initialize SOME values
+    * instantiates ALL major Prometheus' run-time components
+    * connect Prometheus' run-time components -- via -- 
+      * channels + references, OR
+      * contexts
+    * Prometheus server runs ALL components -- as an -- [actor-like model](https://www.brianstorti.com/the-actor-model/) 
+      * == EACH Prometheus' component == INDEPENDENT actor /
+        * 's logic is executed / OWN goroutine
+        * communicate to -- , via channels, -- OTHER ' components
+      * / 
+        * [`oklog/pkg/group`](https://pkg.go.dev/github.com/oklog/run) coordinates ALL interconnected actors
+          * responsible for
+            * startup
+            * shutdown
+          * execute ALL components parallel
+        * if you want to configure the components initialization order -> define MULTIPLE channels
+          * _Example of order:_
+            * storage
+            * load configuration
+            * UI
 
-As a first step, `main()` defines and parses the server's command-line flags into a [local configuration structure](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L83-L100), while performing extra sanitization and initialization for some values. Note that this flag-based configuration structure is independent of the configuration that is later read from a configuration file (as provided by the `--config.file` flag). Prometheus distinguishes between flag-based configuration and file-based configuration: flags are used for simple settings that do not support being updated without a server restart, while any settings provided in the configuration file have to support being reloaded without restarting the entire server.
-
-Next, `main()` instantiates all the major run-time components of Prometheus and connects them together using channels, references, or passing in contexts for later coordination and cancellation. These components include service discovery, target scraping, storage, and more (as laid out in the rest of this document).
-
-Finally, the server [runs all components](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L366-L598) in an [actor-like model](https://www.brianstorti.com/the-actor-model/), using [`github.com/oklog/oklog/pkg/group`](https://pkg.go.dev/github.com/oklog/run) to coordinate the startup and shutdown of all interconnected actors. Multiple channels are used to enforce ordering constraints, such as not enabling the web interface before the storage is ready and the initial configuration file load has happened.
+* Prometheus' run-time components ==
+  * service discovery, 
+  * target scraping, 
+  * storage,
+  * ...
 
 ## Configuration
 
-The configuration subsystem is responsible for reading, validating, and applying the settings provided in the YAML-based configuration file as specified by the `--config.file` flag. [See the documentation](https://prometheus.io/docs/prometheus/latest/configuration/configuration/) for a description of all configuration settings. Prometheus has functionality for reading and applying a configuration file, and it has a goroutine that watches for requests to reload the configuration from the same file. Both mechanisms are outlined below.
+* types of configurations
+  * flag-based configuration
+    * == `--config.file`
+    * uses
+      * simple settings
+    * cons
+      * if you want to update -> you need to restart the server
+  * file-based configuration
+    * == ".yaml"
+    * pros
+      * support hot reload
+
+* responsible for
+  * reading,
+  * validating,
+  * applying
+
+* [ALL configuration settings](/prometheus/docs/configuration/configuration.md)
+* TODO: Prometheus has functionality for reading and applying a configuration file, and it has a goroutine that watches for requests to reload the configuration from the same file
+* Both mechanisms are outlined below.
 
 ### Configuration reading and parsing
 
-When the initial configuration is loaded or a subsequent reload happens, Prometheus calls the [`config.LoadFile()`](https://github.com/prometheus/prometheus/blob/v2.3.1/config/config.go#L52-L64) function to read its configuration from a file and parse it into the [`config.Config` structure](https://github.com/prometheus/prometheus/blob/v2.3.1/config/config.go#L133-L145). This structure represents the overall configuration of the server and all of its components. It contains sub-structures that mirror the hierarchy of the configuration file. Each struct has a [default configuration](https://github.com/prometheus/prometheus/blob/v2.3.1/config/config.go#L66-L131) as well as an `UnmarshalYAML()` method which parses the struct from YAML and may apply further validity checks or initializations. Once the configuration has been fully parsed and validated, the resulting configuration structure is returned.
+When the initial configuration is loaded or a subsequent reload happens, Prometheus calls the [`config.LoadFile()`](https://github.com/prometheus/prometheus/blob/v2.3.1/config/config.go#L52-L64) function to read its configuration from a file and parse it into the [`config.Config` structure](https://github.com/prometheus/prometheus/blob/v2.3.1/config/config.go#L133-L145)
+* This structure represents the overall configuration of the server and all of its components
+* It contains sub-structures that mirror the hierarchy of the configuration file
+* Each struct has a [default configuration](https://github.com/prometheus/prometheus/blob/v2.3.1/config/config.go#L66-L131) as well as an `UnmarshalYAML()` method which parses the struct from YAML and may apply further validity checks or initializations
+* Once the configuration has been fully parsed and validated, the resulting configuration structure is returned.
 
 ### Reload handler
 
-The [configuration reload handler](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L443-L478) is a goroutine that is implemented directly in `main()` and listens for configuration reload requests from either the web interface or a [`HUP` signal](https://en.wikipedia.org/wiki/Signal_(IPC)#SIGHUP). When it receives a reload request, it re-reads the configuration file from disk using `config.LoadFile()` as described above and applies the resulting `config.Config` structure to all components that support reloading by either [calling their `ApplyConfig()` method or by calling a custom reload function](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L302-L341).
+The [configuration reload handler](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L443-L478) is a goroutine that is implemented directly in `main()` and listens for configuration reload requests from either the web interface or a [`HUP` signal](https://en.wikipedia.org/wiki/Signal_(IPC)#SIGHUP)
+* When it receives a reload request, it re-reads the configuration file from disk using `config.LoadFile()` as described above and applies the resulting `config.Config` structure to all components that support reloading by either [calling their `ApplyConfig()` method or by calling a custom reload function](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L302-L341).
 
 ## Termination handler
 
-The [termination handler](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L367-L392) is a goroutine that is implemented directly in `main()` and listens for termination requests from either the web interface or a [`TERM` signal](https://en.wikipedia.org/wiki/Signal_(IPC)#SIGTERM). When it receives a termination request, it returns and thus triggers the orderly shutdown of all other Prometheus components via the actor coordination functionality provided by [`github.com/oklog/oklog/pkg/group`](https://pkg.go.dev/github.com/oklog/run).
+The [termination handler](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L367-L392) is a goroutine that is implemented directly in `main()` and listens for termination requests from either the web interface or a [`TERM` signal](https://en.wikipedia.org/wiki/Signal_(IPC)#SIGTERM)
+* When it receives a termination request, it returns and thus triggers the orderly shutdown of all other Prometheus components via the actor coordination functionality provided by [`github.com/oklog/oklog/pkg/group`](https://pkg.go.dev/github.com/oklog/run).
 
 ## Scrape discovery manager
 
-The scrape discovery manager is a [`discovery.Manager`](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/manager.go#L73-L89) that uses Prometheus's service discovery functionality to find and continuously update the list of targets from which Prometheus should scrape metrics. It runs independently of the scrape manager (which performs the actual target scrapes) and feeds it with a stream of [target group](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/targetgroup/targetgroup.go#L24-L33) updates over a [synchronization channel](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L431).
+The scrape discovery manager is a [`discovery.Manager`](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/manager.go#L73-L89) that uses Prometheus's service discovery functionality to find and continuously update the list of targets from which Prometheus should scrape metrics
+* It runs independently of the scrape manager (which performs the actual target scrapes) and feeds it with a stream of [target group](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/targetgroup/targetgroup.go#L24-L33) updates over a [synchronization channel](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L431).
 
-Internally, the scrape discovery manager runs an instance of each configuration-defined service discovery mechanism in its own goroutine. For example, if a `scrape_config` in the configuration file defines two [`kubernetes_sd_config` sections](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config), the manager will run two separate [`kubernetes.Discovery`](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/kubernetes/kubernetes.go#L150-L159) instances. Each of these discovery instances implements the [`discovery.Discoverer` interface](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/manager.go#L41-L55) and sends target updates over a synchronization channel to the controlling discovery manager, which then enriches the target group update with information about the specific discovery instance and forwards it to the scrape manager.
+Internally, the scrape discovery manager runs an instance of each configuration-defined service discovery mechanism in its own goroutine
+* For example, if a `scrape_config` in the configuration file defines two [`kubernetes_sd_config` sections](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#kubernetes_sd_config), the manager will run two separate [`kubernetes.Discovery`](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/kubernetes/kubernetes.go#L150-L159) instances
+* Each of these discovery instances implements the [`discovery.Discoverer` interface](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/manager.go#L41-L55) and sends target updates over a synchronization channel to the controlling discovery manager, which then enriches the target group update with information about the specific discovery instance and forwards it to the scrape manager.
 
 When a configuration change is applied, the discovery manager stops all currently running discovery mechanisms and restarts new ones as defined in the new configuration file.
 
-For more details, see the more extensive [documentation about service discovery internals](https://github.com/prometheus/prometheus/blob/main/discovery/README.md).
+* [MORE](../discovery/README.md)
 
 ## Scrape manager
 

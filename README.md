@@ -40,8 +40,6 @@ The features that distinguish Prometheus from other metrics and monitoring syste
 
 ## Install
 
-There are various ways of installing Prometheus.
-
 ### Precompiled binaries
 
 Precompiled binaries for released versions are available in the
@@ -65,51 +63,66 @@ Prometheus will now be reachable at <http://localhost:9090/>.
 
 ### Building from source
 
-To build Prometheus from source code, You need:
+* requirements
+  * Go OR make
+    * Go \>= version specified | [go.mod](./go.mod)
+  * NodeJS
+    * \>= version specified | [.nvmrc](./web/ui/.nvmrc)
+  * npm v8+
 
-* Go: Version specified in [go.mod](./go.mod) or greater.
-* NodeJS: Version specified in [.nvmrc](./web/ui/.nvmrc) or greater.
-* npm: Version 8 or greater (check with `npm --version` and [here](https://www.npmjs.com/)).
+#### Go
 
-Start by cloning the repository:
+* ❌NOT include the React UI❌
+  * if you want to use it -> `make assets`
 
-```bash
-git clone https://github.com/prometheus/prometheus.git
-cd prometheus
-```
+* steps
+  * | ⚠️this path⚠️,
 
-You can use the `go` tool to build and install the `prometheus`
-and `promtool` binaries into your `GOPATH`:
+    ```bash
+    GO111MODULE=on go install github.com/prometheus/prometheus/cmd/...
+    # GO111MODULE=on      == enable Go modules  (| Go 1.16+, ALREADY included)
+    # build & install the `prometheus` & `promtool` binaries | your `GOPATH`
+    # ...     == install ALL subdirectories 
+    
+    prometheus --config.file=your_config.yml
+    # prometheus --config.file=documentation/examples/prometheus.yml
+    ```
+    * Problems: 
+      * Problem1: | `go install ...`, "...403 Forbidden"
+        * Solution: `go install ./cmd/prometheus ./cmd/promtool`
+    * [cmd](cmd)
+      * == prometheus + promtool
+    * ❌if you do NOT run | this path -> fail❌
+      * Reason: 🧠
+        * Prometheus expect to read its web assets | local filesystem directories "web/ui/static" & "web/ui/templates"
+          * OTHERWISE, NOT found🧠
+    * _Example of configurations:_ [here](documentation/examples/prometheus.yml)
 
-```bash
-GO111MODULE=on go install github.com/prometheus/prometheus/cmd/...
-prometheus --config.file=your_config.yml
-```
+#### make
 
-*However*, when using `go install` to build Prometheus, Prometheus will expect to be able to
-read its web assets from local filesystem directories under `web/ui/static` and
-`web/ui/templates`. In order for these assets to be found, you will have to run Prometheus
-from the root of the cloned repository. Note also that these directories do not include the
-React UI unless it has been built explicitly using `make assets` or `make build`.
+* steps
+  * | this path,
 
-An example of the above configuration file can be found [here.](https://github.com/prometheus/prometheus/blob/main/documentation/examples/prometheus.yml)
+      ```bash
+      make build        # compile & include web assets | Prometheus binary 
+    
+      ./prometheus --config.file=your_config.yml
+      ```
 
-You can also build using `make build`, which will compile in the web assets so that
-Prometheus can be run from anywhere:
-
-```bash
-make build
-./prometheus --config.file=your_config.yml
-```
-
-The Makefile provides several targets:
-
-* *build*: build the `prometheus` and `promtool` binaries (includes building and compiling in web assets)
-* *test*: run the tests
-* *test-short*: run the short tests
-* *format*: format the source code
-* *vet*: check the source code for common errors
-* *assets*: build the React UI
+* Makefile
+  * provided targets
+    * *build*
+      * build the `prometheus` & `promtool` binaries + build & compile | web assets
+    * *test*
+      * run the tests
+    * *test-short*
+      * run the short tests
+    * *format*
+      * format the source code
+    * *vet*
+      * check the source code / COMMON errors
+    * *assets*
+      * build the React UI
 
 ### Service discovery plugins
 
