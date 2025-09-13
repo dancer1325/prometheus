@@ -73,7 +73,7 @@ Prometheus will now be reachable at <http://localhost:9090/>.
 #### Go
 
 * ❌NOT include the React UI❌
-  * if you want to use it -> `make assets`
+  * 💡if you want to use it -> `make assets` 💡
 
 * steps
   * | ⚠️this path⚠️,
@@ -96,6 +96,8 @@ Prometheus will now be reachable at <http://localhost:9090/>.
       * Reason: 🧠
         * Prometheus expect to read its web assets | local filesystem directories "web/ui/static" & "web/ui/templates"
           * OTHERWISE, NOT found🧠
+    * installed | 👀"{go env GOPATH}/bin"👀
+      * NORMALLY, "$HOME/go/bin"
     * _Example of configurations:_ [here](documentation/examples/prometheus.yml)
 
 #### make

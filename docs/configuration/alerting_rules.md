@@ -9,6 +9,9 @@ to an external service. Whenever the alert expression results in one or more
 vector elements at a given point in time, the alert counts as active for these
 elements' label sets.
 
+* restrictions
+  * 's names MUST be [valid label values](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels)
+
 ## Defining alerting rules
 
 Alerting rules are configured in Prometheus in the same way as [recording

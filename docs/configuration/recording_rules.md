@@ -6,68 +6,63 @@ sort_rank: 2
 
 ## Configuring rules
 
-Prometheus supports two types of rules which may be configured and then
-evaluated at regular intervals: recording rules and [alerting
-rules](alerting_rules.md). To include rules in Prometheus, create a file
-containing the necessary rule statements and have Prometheus load the file via
-the `rule_files` field in the [Prometheus configuration](configuration.md).
-Rule files use YAML.
+* Prometheus' rules
+  * syntax
+    ```yaml
+    groups:
+      [ - <rule_group> ]
+    ```
+  * supported types 
+    * [recording rules](#recording-rules)
+    * [alerting rules](alerting_rules.md)
+  * can be
+    * configured
+      * == define | .yaml
+    * evaluated | regular intervals
+  * 👀if you want to 
+    * include them | Prometheus -> [Prometheus configuration](configuration.md)'s `rule_files` field👀
+    * reload them | runtime -> send `SIGHUP` | Prometheus process👀
 
-The rule files can be reloaded at runtime by sending `SIGHUP` to the Prometheus
-process. The changes are only applied if all rule files are well-formatted.
+* rule group
+  * == MULTIPLE rules /
+    * run SEQUENTIALLY | regular interval
+    * 👀SAME evaluation time 👀
+      * == | evaluate a rule,
+        * ALL rules use the SAME timestamp
 
 ## Syntax-checking rules
 
-To quickly check whether a rule file is syntactically correct without starting
-a Prometheus server, you can use Prometheus's `promtool` command-line utility
-tool:
+* `promtool`
+  * == Prometheus's CL utility tool
+    * ALSO included | download [Prometheus binary](https://prometheus.io/download/)
+    * allows
+      * checking whether a rule file is syntactically correct / ⚠️WITHOUT starting a Prometheus server⚠️
 
-```bash
-promtool check rules /path/to/example.rules.yml
-```
-
-The `promtool` binary is part of the `prometheus` archive offered on the
-project's [download page](https://prometheus.io/download/).
-
-When the file is syntactically valid, the checker prints a textual
-representation of the parsed rules to standard output and then exits with
-a `0` return status.
-
-If there are any syntax errors or invalid input arguments, it prints an error
-message to standard error and exits with a `1` return status.
+        ```bash
+        promtool check rules /path/to/example.rules.yml
+        ```
+        * if file is 
+          * syntactically valid -> 
+            * prints parsed rules' textual representation | standard output 
+            * returns `0`
+          * NOT syntactically valid OR invalid input arguments ->
+            * prints an error message | standard error
+            * returns `1`
 
 ## Recording rules
 
-Recording rules allow you to precompute frequently needed or computationally
-expensive expressions and save their result as a new set of time series.
-Querying the precomputed result will then often be much faster than executing
-the original expression every time it is needed. This is especially useful for
-dashboards, which need to query the same expression repeatedly every time they
-refresh.
-
-Recording and alerting rules exist in a rule group. Rules within a group are
-run sequentially at a regular interval, with the same evaluation time.
-The names of recording rules must be
-[valid metric names](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels).
-The names of alerting rules must be
-[valid label values](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels).
-
-The syntax of a rule file is:
-
-```yaml
-groups:
-  [ - <rule_group> ]
-```
-
-A simple example rules file would be:
-
-```yaml
-groups:
-  - name: example
-    rules:
-    - record: code:prometheus_http_requests_total:sum
-      expr: sum by (code) (prometheus_http_requests_total)
-```
+* Recording rules
+  * 👀organized | rule group👀
+  * allow you to
+    * about frequently needed OR computationally expensive expressions
+      * precompute 
+        * -> | query, MUST faster
+      * save their result -- as a -- NEW set of time series
+  * uses
+    * dashboards
+      * Reason: 🧠query the SAME expression REPEATEDLY / EACH refresh🧠
+  * restrictions
+    * 's names MUST be [valid metric names](https://prometheus.io/docs/concepts/data_model/#metric-names-and-labels)
 
 ### `<rule_group>`
 

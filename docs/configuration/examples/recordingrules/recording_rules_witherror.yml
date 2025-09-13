@@ -1,0 +1,23 @@
+groups:
+  - name: cpu_monitoring
+    interval: 30s
+    rules:
+      # Recording rule: Calculate average CPU usage per instance
+      - record: instance:cpu_usage:avg
+        expr: avg by (instance) (100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100))
+        labels:
+          team: infrastructure
+
+      # Recording rule: Calculate total HTTP requests per second
+      - record: job:http_requests:rate5m
+        expr: sum by (job) (rate(prometheus_http_requests_total[5m]))
+
+      # Recording rule: Memory usage percentage
+      - record: instance:memory_usage:percentage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+        
+      # Invalid rule: Missing 'expr' field and invalid record name
+      - record: invalid-metric-name-with-dashes!
+        # expr: missing required field
+        labels:
+          invalid: value
