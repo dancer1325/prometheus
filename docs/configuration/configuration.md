@@ -5,19 +5,20 @@ sort_rank: 1
 
 * types of configurations
   * flag-based configuration
-    * == `--config.file`
+    * `./prometheus -h`
+      * 👀AVAILABLE commands👀
+      * _Example:_ `--config.file`
     * uses
       * simple settings
       * configure immutable system parameters
         * _Examples:_ storage locations, amount of data / keep | disk & memory
     * cons
       * if you want to update -> you need to restart the server
-    * `./prometheus -h`
-      * AVAILABLE commands
   * file-based configuration
     * == ".yaml"
     * pros
       * support hot reload
+        * ❌BUT NOT happen AUTOMATICALLY❌
         * ❌if NEW configuration is NOT well-formed -> the changes will NOT be applied❌ 
     * uses
       * scraping [jobs + jobs' instances](https://prometheus.io/docs/concepts/jobs_instances/)
@@ -25,230 +26,259 @@ sort_rank: 1
 
 * configuration reload
   * ALSO reload ANY configured rule files
-  * ways to trigger
-    * send a `SIGHUP` -- to the -- Prometheus process
+  * 👀ways to trigger👀
+    * send a `HUP` -- to the -- Prometheus process
+      * == `kill -HUP PREVIOUS_PID_GOT`
     * | enable the `--web.enable-lifecycle` flag,
       * send a HTTP POST request -- to the -- `/-/reload` endpoint
 
 ## Configuration file
 
-To specify which configuration file to load, use the `--config.file` flag.
+* == ".yaml" /
+  * if you want to load -> `--config.file=pathToPrometheusConfigFile`
+  * `[]`
+    * == OPTIONAL
+  * if non-list parameters are NOT specified -> set the specified default
 
-The file is written in [YAML format](https://en.wikipedia.org/wiki/YAML),
-defined by the scheme described below.
-Brackets indicate that a parameter is optional
-* For non-list parameters the
-value is set to the specified default.
+    ```yaml
+    global:
+      # How frequently to scrape targets by default.
+      [ scrape_interval: <duration> | default = 1m ]
+    
+      # How long until a scrape request times out.
+      # It cannot be greater than the scrape interval.
+      [ scrape_timeout: <duration> | default = 10s ]
+    
+      # The protocols to negotiate during a scrape with the client.
+      # Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
+      # OpenMetricsText1.0.0, PrometheusText0.0.4.
+      # The default value changes to [ PrometheusProto, OpenMetricsText1.0.0, OpenMetricsText0.0.1, PrometheusText0.0.4 ]
+      # when native_histogram feature flag is set.
+      [ scrape_protocols: [<string>, ...] | default = [ OpenMetricsText1.0.0, OpenMetricsText0.0.1, PrometheusText0.0.4 ] ]
+    
+      # How frequently to evaluate rules.
+      [ evaluation_interval: <duration> | default = 1m ]
+    
+      # Offset the rule evaluation timestamp of this particular group by the
+      # specified duration into the past to ensure the underlying metrics have
+      # been received. Metric availability delays are more likely to occur when
+      # Prometheus is running as a remote write target, but can also occur when
+      # there's anomalies with scraping.
+      [ rule_query_offset: <duration> | default = 0s ]
+    
+      # The labels to add to any time series or alerts when communicating with
+      # external systems (federation, remote storage, Alertmanager).
+      # Environment variable references `${var}` or `$var` are replaced according
+      # to the values of the current environment variables.
+      # References to undefined variables are replaced by the empty string.
+      # The `$` character can be escaped by using `$$`.
+      external_labels:
+        [ <labelname>: <labelvalue> ... ]
+    
+      # File to which PromQL queries are logged.
+      # Reloading the configuration will reopen the file.
+      [ query_log_file: <string> ]
+    
+      # File to which scrape failures are logged.
+      # Reloading the configuration will reopen the file.
+      [ scrape_failure_log_file: <string> ]
+    
+      # An uncompressed response body larger than this many bytes will cause the
+      # scrape to fail. 0 means no limit. Example: 100MB.
+      # This is an experimental feature, this behaviour could
+      # change or be removed in the future.
+      [ body_size_limit: <size> | default = 0 ]
+    
+      # Per-scrape limit on the number of scraped samples that will be accepted.
+      # If more than this number of samples are present after metric relabeling
+      # the entire scrape will be treated as failed. 0 means no limit.
+      [ sample_limit: <int> | default = 0 ]
+    
+      # Limit on the number of labels that will be accepted per sample. If more
+      # than this number of labels are present on any sample post metric-relabeling,
+      # the entire scrape will be treated as failed. 0 means no limit.
+      [ label_limit: <int> | default = 0 ]
+    
+      # Limit on the length (in bytes) of each individual label name. If any label
+      # name in a scrape is longer than this number post metric-relabeling, the
+      # entire scrape will be treated as failed. Note that label names are UTF-8
+      # encoded, and characters can take up to 4 bytes. 0 means no limit.
+      [ label_name_length_limit: <int> | default = 0 ]
+    
+      # Limit on the length (in bytes) of each individual label value. If any label
+      # value in a scrape is longer than this number post metric-relabeling, the
+      # entire scrape will be treated as failed. Note that label values are UTF-8
+      # encoded, and characters can take up to 4 bytes. 0 means no limit.
+      [ label_value_length_limit: <int> | default = 0 ]
+    
+      # Limit per scrape config on number of unique targets that will be
+      # accepted. If more than this number of targets are present after target
+      # relabeling, Prometheus will mark the targets as failed without scraping them.
+      # 0 means no limit. This is an experimental feature, this behaviour could
+      # change in the future.
+      [ target_limit: <int> | default = 0 ]
+    
+      # Limit per scrape config on the number of targets dropped by relabeling
+      # that will be kept in memory. 0 means no limit.
+      [ keep_dropped_targets: <int> | default = 0 ]
+    
+      # Specifies the validation scheme for metric and label names. Either blank or
+      # "utf8" for full UTF-8 support, or "legacy" for letters, numbers, colons,
+      # and underscores.
+      [ metric_name_validation_scheme: <string> | default "utf8" ]
+    
+      # Specifies whether to convert all scraped classic histograms into native
+      # histograms with custom buckets.
+      [ convert_classic_histograms_to_nhcb: <bool> | default = false]
+    
+      # Specifies whether to scrape a classic histogram, even if it is also exposed as a native
+      # histogram (has no effect without --enable-feature=native-histograms).
+      [ always_scrape_classic_histograms: <boolean> | default = false ]
+    
+    
+    runtime:
+      # Configure the Go garbage collector GOGC parameter
+      # See: https://tip.golang.org/doc/gc-guide#GOGC
+      # Lowering this number increases CPU usage.
+      [ gogc: <int> | default = 75 ]
+    
+    # Rule files specifies a list of globs. Rules and alerts are read from
+    # all matching files.
+    rule_files:
+      [ - <filepath_glob> ... ]
+    
+    # Scrape config files specifies a list of globs. Scrape configs are read from
+    # all matching files and appended to the list of scrape configs.
+    scrape_config_files:
+      [ - <filepath_glob> ... ]
+    
+    # A list of scrape configurations.
+    scrape_configs:
+      [ - <scrape_config> ... ]
+    
+    # Alerting specifies settings related to the Alertmanager.
+    alerting:
+      alert_relabel_configs:
+        [ - <relabel_config> ... ]
+      alertmanagers:
+        [ - <alertmanager_config> ... ]
+    
+    # Settings related to the remote write feature.
+    remote_write:
+      [ - <remote_write> ... ]
+    
+    # Settings related to the OTLP receiver feature.
+    # See https://prometheus.io/docs/guides/opentelemetry/ for best practices.
+    otlp:
+      # Promote specific list of resource attributes to labels.
+      # It cannot be configured simultaneously with 'promote_all_resource_attributes: true'.
+      [ promote_resource_attributes: [<string>, ...] | default = [ ] ]
+      # Promoting all resource attributes to labels, except for the ones configured with 'ignore_resource_attributes'.
+      # Be aware that changes in attributes received by the OTLP endpoint may result in time series churn and lead to high memory usage by the Prometheus server.
+      # It cannot be set to 'true' simultaneously with 'promote_resource_attributes'.
+      [ promote_all_resource_attributes: <boolean> | default = false ]
+      # Which resource attributes to ignore, can only be set when 'promote_all_resource_attributes' is true.
+      [ ignore_resource_attributes: [<string>, ...] | default = [] ]
+      # Configures translation of OTLP metrics when received through the OTLP metrics
+      # endpoint. Available values:
+      # - "UnderscoreEscapingWithSuffixes" refers to commonly agreed normalization used
+      #   by OpenTelemetry in https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/pkg/translator/prometheus
+      # - "NoUTF8EscapingWithSuffixes" is a mode that relies on UTF-8 support in Prometheus.
+      #   It preserves all special characters like dots, but still adds required metric name suffixes
+      #   for units and _total, as UnderscoreEscapingWithSuffixes does.
+      # - "UnderscoreEscapingWithoutSuffixes" translates metric name characters that
+      #   are not alphanumerics/underscores/colons to underscores, and label name
+      #   characters that are not alphanumerics/underscores to underscores, but
+      #   unlike UnderscoreEscapingWithSuffixes it does not append any suffixes to
+      #   the names.
+      # - (EXPERIMENTAL) "NoTranslation" is a mode that relies on UTF-8 support in Prometheus.
+      #   It preserves all special character like dots and won't append special suffixes for metric
+      #   unit and type.
+      #
+      #   WARNING: The "NoTranslation" setting has significant known risks and limitations (see https://prometheus.io/docs/practices/naming/
+      #   for details):
+      #       * Impaired UX when using PromQL in plain YAML (e.g. alerts, rules, dashboard, autoscaling configuration).
+      #       * Series collisions which in the best case may result in OOO errors, in the worst case a silently malformed
+      #         time series. For instance, you may end up in situation of ingesting `foo.bar` series with unit
+      #         `seconds` and a separate series `foo.bar` with unit `milliseconds`.
+      [ translation_strategy: <string> | default = "UnderscoreEscapingWithSuffixes" ]
+      # Enables adding "service.name", "service.namespace" and "service.instance.id"
+      # resource attributes to the "target_info" metric, on top of converting
+      # them into the "instance" and "job" labels.
+      [ keep_identifying_resource_attributes: <boolean> | default = false ]
+      # Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
+      [ convert_histograms_to_nhcb: <boolean> | default = false ]
+      # Enables promotion of OTel scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
+      # This is disabled by default for backwards compatibility, but according to OTel spec, scope metadata _should_ be identifying, i.e. translated to metric labels.
+      [ promote_scope_metadata: <boolean> | default = false ]
+    
+    # Settings related to the remote read feature.
+    remote_read:
+      [ - <remote_read> ... ]
+    
+    # Storage related settings that are runtime reloadable.
+    storage:
+      [ tsdb: <tsdb> ]
+      [ exemplars: <exemplars> ]
+    
+    # Configures exporting traces.
+    tracing:
+      [ <tracing_config> ]
+    ```
+  * `global`
+    * 's parameters apply | ALL OTHER configuration's sections
 
-Generic placeholders are defined as follows:
+* generic placeholders
+  * `<boolean>`
+  * `<duration>`
+    * restrictions
+      * `((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)`
+        * _Examples:_
+          * `1d`
+          * `1h30m`
+          * `5m`
+          * `10s`
+  * `<filename>`
+    * == valid path | CURRENT working directory
+  * `<float>`
+  * `<host>`
+    * == string /
+      * hostname or IP + optional port number
+  * `<int>`
+  * `<labelname>`
+    * == string /
+      * `[a-zA-Z_][a-zA-Z0-9_]*`
+        * if there is another unsupported character -> should be converted -- to an -- `_`
+          * _Example:_ label `app.kubernetes.io/name` -- should be written as -- `app_kubernetes_io_name`
+  * `<labelvalue>`
+    * == string of unicode characters
+  * `<path>`
+    * valid URL path
+  * `<scheme>`
+    * == string /
+      * ALLOWED values
+        * `http`
+        * `https`
+  * `<secret>`
+    * == regular string / secret
+      * _Example:_ password
+  * `<string>`
+  * `<size>`
+    * | bytes
+      * _Example:_ `512MB`
+    * ALLOWED units
+      * B,
+      * KB,
+      * MB,
+      * GB,
+      * TB,
+      * PB,
+      * EB
+  * `<tmpl_string>`
+    * == string /
+      * BEFORE usage, template-expanded
 
-* `<boolean>`: a boolean that can take the values `true` or `false`
-* `<duration>`: a duration matching the regular expression `((([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?|0)`, e.g. `1d`, `1h30m`, `5m`, `10s`
-* `<filename>`: a valid path in the current working directory
-* `<float>`: a floating-point number
-* `<host>`: a valid string consisting of a hostname or IP followed by an optional port number
-* `<int>`: an integer value
-* `<labelname>`: a string matching the regular expression `[a-zA-Z_][a-zA-Z0-9_]*`. Any other unsupported character in the source label should be converted to an underscore. For example, the label `app.kubernetes.io/name` should be written as `app_kubernetes_io_name`.
-* `<labelvalue>`: a string of unicode characters
-* `<path>`: a valid URL path
-* `<scheme>`: a string that can take the values `http` or `https`
-* `<secret>`: a regular string that is a secret, such as a password
-* `<string>`: a regular string
-* `<size>`: a size in bytes, e.g. `512MB`. A unit is required. Supported units: B, KB, MB, GB, TB, PB, EB.
-* `<tmpl_string>`: a string which is template-expanded before usage
-
-The other placeholders are specified separately.
-
-A valid example file can be found [here](/config/testdata/conf.good.yml).
-
-The global configuration specifies parameters that are valid in all other configuration
-contexts. They also serve as defaults for other configuration sections.
-
-```yaml
-global:
-  # How frequently to scrape targets by default.
-  [ scrape_interval: <duration> | default = 1m ]
-
-  # How long until a scrape request times out.
-  # It cannot be greater than the scrape interval.
-  [ scrape_timeout: <duration> | default = 10s ]
-
-  # The protocols to negotiate during a scrape with the client.
-  # Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
-  # OpenMetricsText1.0.0, PrometheusText0.0.4.
-  # The default value changes to [ PrometheusProto, OpenMetricsText1.0.0, OpenMetricsText0.0.1, PrometheusText0.0.4 ]
-  # when native_histogram feature flag is set.
-  [ scrape_protocols: [<string>, ...] | default = [ OpenMetricsText1.0.0, OpenMetricsText0.0.1, PrometheusText0.0.4 ] ]
-
-  # How frequently to evaluate rules.
-  [ evaluation_interval: <duration> | default = 1m ]
-
-  # Offset the rule evaluation timestamp of this particular group by the
-  # specified duration into the past to ensure the underlying metrics have
-  # been received. Metric availability delays are more likely to occur when
-  # Prometheus is running as a remote write target, but can also occur when
-  # there's anomalies with scraping.
-  [ rule_query_offset: <duration> | default = 0s ]
-
-  # The labels to add to any time series or alerts when communicating with
-  # external systems (federation, remote storage, Alertmanager).
-  # Environment variable references `${var}` or `$var` are replaced according
-  # to the values of the current environment variables.
-  # References to undefined variables are replaced by the empty string.
-  # The `$` character can be escaped by using `$$`.
-  external_labels:
-    [ <labelname>: <labelvalue> ... ]
-
-  # File to which PromQL queries are logged.
-  # Reloading the configuration will reopen the file.
-  [ query_log_file: <string> ]
-
-  # File to which scrape failures are logged.
-  # Reloading the configuration will reopen the file.
-  [ scrape_failure_log_file: <string> ]
-
-  # An uncompressed response body larger than this many bytes will cause the
-  # scrape to fail. 0 means no limit. Example: 100MB.
-  # This is an experimental feature, this behaviour could
-  # change or be removed in the future.
-  [ body_size_limit: <size> | default = 0 ]
-
-  # Per-scrape limit on the number of scraped samples that will be accepted.
-  # If more than this number of samples are present after metric relabeling
-  # the entire scrape will be treated as failed. 0 means no limit.
-  [ sample_limit: <int> | default = 0 ]
-
-  # Limit on the number of labels that will be accepted per sample. If more
-  # than this number of labels are present on any sample post metric-relabeling,
-  # the entire scrape will be treated as failed. 0 means no limit.
-  [ label_limit: <int> | default = 0 ]
-
-  # Limit on the length (in bytes) of each individual label name. If any label
-  # name in a scrape is longer than this number post metric-relabeling, the
-  # entire scrape will be treated as failed. Note that label names are UTF-8
-  # encoded, and characters can take up to 4 bytes. 0 means no limit.
-  [ label_name_length_limit: <int> | default = 0 ]
-
-  # Limit on the length (in bytes) of each individual label value. If any label
-  # value in a scrape is longer than this number post metric-relabeling, the
-  # entire scrape will be treated as failed. Note that label values are UTF-8
-  # encoded, and characters can take up to 4 bytes. 0 means no limit.
-  [ label_value_length_limit: <int> | default = 0 ]
-
-  # Limit per scrape config on number of unique targets that will be
-  # accepted. If more than this number of targets are present after target
-  # relabeling, Prometheus will mark the targets as failed without scraping them.
-  # 0 means no limit. This is an experimental feature, this behaviour could
-  # change in the future.
-  [ target_limit: <int> | default = 0 ]
-
-  # Limit per scrape config on the number of targets dropped by relabeling
-  # that will be kept in memory. 0 means no limit.
-  [ keep_dropped_targets: <int> | default = 0 ]
-
-  # Specifies the validation scheme for metric and label names. Either blank or
-  # "utf8" for full UTF-8 support, or "legacy" for letters, numbers, colons,
-  # and underscores.
-  [ metric_name_validation_scheme: <string> | default "utf8" ]
-
-  # Specifies whether to convert all scraped classic histograms into native
-  # histograms with custom buckets.
-  [ convert_classic_histograms_to_nhcb: <bool> | default = false]
-
-  # Specifies whether to scrape a classic histogram, even if it is also exposed as a native
-  # histogram (has no effect without --enable-feature=native-histograms).
-  [ always_scrape_classic_histograms: <boolean> | default = false ]
-
-
-runtime:
-  # Configure the Go garbage collector GOGC parameter
-  # See: https://tip.golang.org/doc/gc-guide#GOGC
-  # Lowering this number increases CPU usage.
-  [ gogc: <int> | default = 75 ]
-
-# Rule files specifies a list of globs. Rules and alerts are read from
-# all matching files.
-rule_files:
-  [ - <filepath_glob> ... ]
-
-# Scrape config files specifies a list of globs. Scrape configs are read from
-# all matching files and appended to the list of scrape configs.
-scrape_config_files:
-  [ - <filepath_glob> ... ]
-
-# A list of scrape configurations.
-scrape_configs:
-  [ - <scrape_config> ... ]
-
-# Alerting specifies settings related to the Alertmanager.
-alerting:
-  alert_relabel_configs:
-    [ - <relabel_config> ... ]
-  alertmanagers:
-    [ - <alertmanager_config> ... ]
-
-# Settings related to the remote write feature.
-remote_write:
-  [ - <remote_write> ... ]
-
-# Settings related to the OTLP receiver feature.
-# See https://prometheus.io/docs/guides/opentelemetry/ for best practices.
-otlp:
-  # Promote specific list of resource attributes to labels.
-  # It cannot be configured simultaneously with 'promote_all_resource_attributes: true'.
-  [ promote_resource_attributes: [<string>, ...] | default = [ ] ]
-  # Promoting all resource attributes to labels, except for the ones configured with 'ignore_resource_attributes'.
-  # Be aware that changes in attributes received by the OTLP endpoint may result in time series churn and lead to high memory usage by the Prometheus server.
-  # It cannot be set to 'true' simultaneously with 'promote_resource_attributes'.
-  [ promote_all_resource_attributes: <boolean> | default = false ]
-  # Which resource attributes to ignore, can only be set when 'promote_all_resource_attributes' is true.
-  [ ignore_resource_attributes: [<string>, ...] | default = [] ]
-  # Configures translation of OTLP metrics when received through the OTLP metrics
-  # endpoint. Available values:
-  # - "UnderscoreEscapingWithSuffixes" refers to commonly agreed normalization used
-  #   by OpenTelemetry in https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/pkg/translator/prometheus
-  # - "NoUTF8EscapingWithSuffixes" is a mode that relies on UTF-8 support in Prometheus.
-  #   It preserves all special characters like dots, but still adds required metric name suffixes
-  #   for units and _total, as UnderscoreEscapingWithSuffixes does.
-  # - "UnderscoreEscapingWithoutSuffixes" translates metric name characters that
-  #   are not alphanumerics/underscores/colons to underscores, and label name
-  #   characters that are not alphanumerics/underscores to underscores, but
-  #   unlike UnderscoreEscapingWithSuffixes it does not append any suffixes to
-  #   the names.
-  # - (EXPERIMENTAL) "NoTranslation" is a mode that relies on UTF-8 support in Prometheus.
-  #   It preserves all special character like dots and won't append special suffixes for metric
-  #   unit and type.
-  #
-  #   WARNING: The "NoTranslation" setting has significant known risks and limitations (see https://prometheus.io/docs/practices/naming/
-  #   for details):
-  #       * Impaired UX when using PromQL in plain YAML (e.g. alerts, rules, dashboard, autoscaling configuration).
-  #       * Series collisions which in the best case may result in OOO errors, in the worst case a silently malformed
-  #         time series. For instance, you may end up in situation of ingesting `foo.bar` series with unit
-  #         `seconds` and a separate series `foo.bar` with unit `milliseconds`.
-  [ translation_strategy: <string> | default = "UnderscoreEscapingWithSuffixes" ]
-  # Enables adding "service.name", "service.namespace" and "service.instance.id"
-  # resource attributes to the "target_info" metric, on top of converting
-  # them into the "instance" and "job" labels.
-  [ keep_identifying_resource_attributes: <boolean> | default = false ]
-  # Configures optional translation of OTLP explicit bucket histograms into native histograms with custom buckets.
-  [ convert_histograms_to_nhcb: <boolean> | default = false ]
-  # Enables promotion of OTel scope metadata (i.e. name, version, schema URL, and attributes) to metric labels.
-  # This is disabled by default for backwards compatibility, but according to OTel spec, scope metadata _should_ be identifying, i.e. translated to metric labels.
-  [ promote_scope_metadata: <boolean> | default = false ]
-
-# Settings related to the remote read feature.
-remote_read:
-  [ - <remote_read> ... ]
-
-# Storage related settings that are runtime reloadable.
-storage:
-  [ tsdb: <tsdb> ]
-  [ exemplars: <exemplars> ]
-
-# Configures exporting traces.
-tracing:
-  [ <tracing_config> ]
-```
+* _Example:_ [here](/prometheus/config/testdata/conf.good.yml)
 
 ### `<scrape_config>`
 
@@ -1772,11 +1802,19 @@ datacenter_id: <string>
 
 ### `<kubernetes_sd_config>`
 
-Kubernetes SD configurations allow retrieving scrape targets from
-[Kubernetes'](https://kubernetes.io/) REST API and always staying synchronized with
-the cluster state.
-
-One of the following `role` types can be configured to discover targets:
+* Kubernetes SD configurations
+  * allow
+    * retrieving scrape targets -- from -- [Kubernetes'](https://kubernetes.io/) REST API /
+      * ALWAYS synchronized -- with the -- cluster state
+  * `.role`
+    * discover targets -- based on -- configuration
+    * ALLOWED  types
+      * [`node`](#node)
+      * [`service`](#service)
+      * [`pod`](#pod)
+      * [`endpoints`](#endpoints)
+      * [`endpointslice`](#endpointslice)
+      * [`ingress`](#ingress)
 
 #### `node`
 

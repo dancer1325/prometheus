@@ -13,7 +13,7 @@
 
 * steps
   * | root path,
-    * `prometheus --config.file=prometheus.yml --web.listen-address=:9090`
+    * `prometheus --config.file=docs/configuration/examples/recordingrules/prometheus.yml --web.listen-address=:9090`
   * | browser, http://localhost:9090
     * status, rule health
       * check existing rule

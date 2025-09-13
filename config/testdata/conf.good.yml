@@ -34,16 +34,18 @@ remote_write:
       client_id: "123"
       client_secret: "456"
       token_url: "http://remote1/auth"
-      tls_config:
-        cert_file: valid_cert_file
-        key_file: valid_key_file
+# TODO: where to find?
+#      tls_config:
+#        cert_file: valid_cert_file
+#        key_file: valid_key_file
 
   - url: http://remote2/push
     protobuf_message: io.prometheus.write.v2.Request
     name: rw_tls
-    tls_config:
-      cert_file: valid_cert_file
-      key_file: valid_key_file
+# TODO: where to find?
+#    tls_config:
+#      cert_file: valid_cert_file
+#      key_file: valid_key_file
     headers:
       name: value
 
@@ -60,9 +62,10 @@ remote_read:
     name: read_special
     required_matchers:
       job: special
-    tls_config:
-      cert_file: valid_cert_file
-      key_file: valid_key_file
+# TODO: where to find?
+#    tls_config:
+#      cert_file: valid_cert_file
+#      key_file: valid_key_file
 
 scrape_configs:
   - job_name: prometheus
@@ -187,11 +190,12 @@ scrape_configs:
           rack: "123"
         allow_stale: true
         scheme: https
-        tls_config:
-          ca_file: valid_ca_file
-          cert_file: valid_cert_file
-          key_file: valid_key_file
-          insecure_skip_verify: false
+# TODO: where to find?
+#        tls_config:
+#          ca_file: valid_ca_file
+#          cert_file: valid_cert_file
+#          key_file: valid_key_file
+#          insecure_skip_verify: false
 
     relabel_configs:
       - source_labels: [__meta_sd_consul_tags]
@@ -202,9 +206,10 @@ scrape_configs:
 
   - job_name: service-z
 
-    tls_config:
-      cert_file: valid_cert_file
-      key_file: valid_key_file
+# TODO: where to find?
+#    tls_config:
+#      cert_file: valid_cert_file
+#      key_file: valid_key_file
 
     authorization:
       credentials: mysecret
@@ -214,9 +219,10 @@ scrape_configs:
     kubernetes_sd_configs:
       - role: endpoints
         api_server: "https://localhost:1234"
-        tls_config:
-          cert_file: valid_cert_file
-          key_file: valid_key_file
+# TODO: where to find?
+#        tls_config:
+#          cert_file: valid_cert_file
+#          key_file: valid_key_file
 
         basic_auth:
           username: "myusername"
@@ -247,9 +253,10 @@ scrape_configs:
           - "https://marathon.example.com:443"
 
         auth_token: "mysecret"
-        tls_config:
-          cert_file: valid_cert_file
-          key_file: valid_key_file
+# TODO: where to find?
+#        tls_config:
+#          cert_file: valid_cert_file
+#          key_file: valid_key_file
 
   - job_name: service-nomad
     nomad_sd_configs:
@@ -327,9 +334,10 @@ scrape_configs:
         port: 9163
         refresh_interval: 1m
         version: 1
-        tls_config:
-          cert_file: valid_cert_file
-          key_file: valid_key_file
+# TODO: where to find?
+#        tls_config:
+#          cert_file: valid_cert_file
+#          key_file: valid_key_file
 
   - job_name: digitalocean-droplets
     digitalocean_sd_configs:
@@ -351,10 +359,11 @@ scrape_configs:
         region: RegionOne
         port: 80
         refresh_interval: 1m
-        tls_config:
-          ca_file: valid_ca_file
-          cert_file: valid_cert_file
-          key_file: valid_key_file
+# TODO: where to find?
+#        tls_config:
+#          ca_file: valid_ca_file
+#          cert_file: valid_cert_file
+#          key_file: valid_key_file
 
   - job_name: service-puppetdb
     puppetdb_sd_configs:
@@ -363,10 +372,11 @@ scrape_configs:
         include_parameters: true
         port: 80
         refresh_interval: 1m
-        tls_config:
-          ca_file: valid_ca_file
-          cert_file: valid_cert_file
-          key_file: valid_key_file
+# TODO: where to find?
+#        tls_config:
+#          ca_file: valid_ca_file
+#          cert_file: valid_cert_file
+#          key_file: valid_key_file
 
   - job_name: hetzner
     relabel_configs:
@@ -460,7 +470,8 @@ tracing:
     foo: "bar"
   timeout: 5s
   compression: "gzip"
-  tls_config:
-    cert_file: valid_cert_file
-    key_file: valid_key_file
-    insecure_skip_verify: true
+  # TODO: where to find?
+#  tls_config:
+#    cert_file: valid_cert_file
+#    key_file: valid_key_file
+#    insecure_skip_verify: true
