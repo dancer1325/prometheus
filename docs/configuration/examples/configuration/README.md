@@ -47,4 +47,19 @@
   * | browser, http://localhost:9090/service-discovery
     * check the labels -- _Example:_ `scrape_interval`
 
+## `scrape_config`
+
+* | root path,
+  * `prometheus --config.file=docs/configuration/examples/configuration/prometheusScrapeConfigs.yml --web.listen-address=:9090`
+* | browser, 
+  * http://localhost:9090/targets
+    * check ALL defined targets
+* | [database-targets.yml](targets/database-targets.yml),
+  * uncomment the line
+  * `ps aux | grep prometheus`
+  * `kill -HUP PREVIOUS_PID_GOT`
+  * | browser,
+    * http://localhost:9090/targets
+      * check NEW label added
+
 * TODO:

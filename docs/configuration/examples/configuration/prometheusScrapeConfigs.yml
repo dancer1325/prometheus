@@ -1,0 +1,46 @@
+scrape_configs:
+  # 1. ways to configure the targets
+  # 1.1 Static targets   --  static_configs  --
+  - job_name: 'web-servers'
+    static_configs:
+      - targets: ['localhost:8080', 'server1:8080']
+        labels:
+          environment: 'production'
+
+  # 1.2 dynamic targets
+  # File-based service discovery
+  - job_name: 'file-discovery'
+    file_sd_configs:
+      - files:
+          - './targets/*.json'
+          - './targets/*.yml'
+        refresh_interval: 30s
+
+  # 2. >1 target groups / 1 job (1 scrape config)
+  - job_name: 'multi-target-job'
+    static_configs:
+      # Target group 1
+      - targets: ['web1:8080', 'web2:8080']
+        labels:
+          service: 'frontend'
+          environment: 'production'
+      # Target group 2  
+      - targets: ['api1:9000', 'api2:9000']
+        labels:
+          service: 'backend'
+          environment: 'production'
+      # Target group 3
+      - targets: ['db1:3306']
+        labels:
+          service: 'database'
+          environment: 'production'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+
+  # 3. job_name MUST be unique ACROSS ALL scrape configurations
+  # uncomment next lines to check
+#  - job_name: 'web-servers'
+#    static_configs:
+#      - targets: [ 'localhost:8082', 'server1:8082' ]
+#        labels:
+#          environment: 'production2'
