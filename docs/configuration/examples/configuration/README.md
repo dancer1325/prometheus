@@ -39,13 +39,13 @@
 
 # configuration file
 
-* _Example:_ [here](/prometheus/config/testdata/conf.good.yml)
-
 * `global`'s parameters applied | ALL OTHER configurations' sections
   * | root path,
     * `prometheus --config.file=config/testdata/conf.good.yml --web.listen-address=:9090`
   * | browser, http://localhost:9090/service-discovery
     * check the labels -- _Example:_ `scrape_interval`
+
+* _Example of generic placeholders:_ [prometheusGenericPlaceHolders.yml](prometheusGenericPlaceHolders.yml)
 
 ## `scrape_config`
 

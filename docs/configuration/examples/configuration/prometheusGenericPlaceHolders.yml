@@ -1,0 +1,65 @@
+global:
+  # <duration>
+  scrape_interval: 1h30m
+  scrape_timeout: 10s
+  evaluation_interval: 5m
+  rule_query_offset: 500ms
+  
+  # <labelname> & <labelvalue>
+  external_labels:
+    environment: production
+    datacenter_region: us_west_2
+    app_kubernetes_io_name: my_app  # convertido de app.kubernetes.io/name
+  
+  # <filename>
+  query_log_file: ./queries.log
+  scrape_failure_log_file: ./failures.log
+  
+  # <size>
+  body_size_limit: 100MB
+  
+  # <int>
+  sample_limit: 5000
+  label_limit: 30
+  target_limit: 100
+
+runtime:
+  # <int> 
+  gogc: 75
+
+scrape_configs:
+  - job_name: web-servers  # <string> 
+    # <scheme> 
+    scheme: https
+    
+    # <path> 
+    metrics_path: /actuator/prometheus
+    
+    # <boolean>
+    honor_labels: true
+    enable_compression: false
+    
+    # <float> 
+    native_histogram_min_bucket_factor: 1.1
+    
+    # <secret> 
+    basic_auth:
+      username: prometheus
+      password: my_secret_password123
+    
+    static_configs:
+      # <host>
+      - targets:
+          - localhost:9090
+          - server1.example.com:8080
+          - 192.168.1.100:3000
+        # <labelvalue>
+        labels:
+          service: "web-frontend"
+          version: "v1.2.3"
+          description: "Servicio web principal 🚀"
+    
+    # <tmpl_string> 
+    relabel_configs:
+      - target_label: instance
+        replacement: '${1}:${2}'  # template expandido
