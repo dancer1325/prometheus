@@ -6,14 +6,12 @@ sort_rank: 4
 
 ## Simple time series selection
 
-Return all time series with the metric `http_requests_total`:
-
-    http_requests_total
-
-Return all time series with the metric `http_requests_total` and the given
-`job` and `handler` labels:
-
-    http_requests_total{job="apiserver", handler="/api/comments"}
+* `http_requests_total`
+  * == metric /
+    * 's return
+      * ALL time series
+  * == `<metric name>{<label name>=<label value>, ...}`
+  * TODO:
 
 Return a whole range of time (in this case 5 minutes up to the query time)
 for the same vector, making it a [range vector](../basics/#range-vector-selectors):

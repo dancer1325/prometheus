@@ -4,38 +4,65 @@ nav_title: Basics
 sort_rank: 1
 ---
 
-Prometheus provides a functional query language called PromQL (Prometheus Query
-Language) that lets the user select and aggregate time series data in real
-time.
-
-When you send a query request to Prometheus, it can be an _instant query_, evaluated at one point in time,
-or a _range query_ at equally-spaced steps between a start and an end time. PromQL works exactly the same
-in each case; the range query is just like an instant query run multiple times at different timestamps.
-
-In the Prometheus UI, the "Table" tab is for instant queries and the "Graph" tab is for range queries.
-
-Other programs can fetch the result of a PromQL expression via the [HTTP API](api.md).
-
-## Examples
-
-This document is a Prometheus basic language reference. For learning, it may be easier to
-start with a couple of [examples](examples.md).
+* Prometheus Query Language (PromQL)
+  * == functional query language /
+    * provided 
+      * -- by -- Prometheus
+    * lets the user 
+      * about time series data | real time,
+        * select
+        * aggregate 
+    * 👀types -- based on -- execution time👀
+      * [instant query](api.md#instant-queries)
+        * == Prometheus UI's "Table" tab
+        * evaluated | SOME point in time
+        * supported types
+          * ANY data type | root of the expression
+      * [range query](api.md#range-queries) / equally-spaced steps
+        * == instant query / run MULTIPLE times | DIFFERENT timestamps
+        * == Prometheus UI's "Graph" tab 
+        * supported types
+          * scalar
+          * instant vector
+    * 👀functional ==👀
+      * compose functions
+      * input data do NOT change
+      * pure functions
+        * == SAME inputs -> SAME output
+      * declarative expressions
+        * != define required steps -- to -- calculate
+    * 💡`{__name__=~".+"}`💡
+      * 's return
+        * ALL supported metrics
+  * ALTERNATIVE
+    * [HTTP API](api.md)
 
 ## Expression language data types
 
-In Prometheus's expression language, an expression or sub-expression can
-evaluate to one of four types:
-
-* **Instant vector** - a set of time series containing a single sample for each time series, all sharing the same timestamp
-* **Range vector** - a set of time series containing a range of data points over time for each time series
-* **Scalar** - a simple numeric floating point value
-* **String** - a simple string value; currently unused
-
-Depending on the use case (e.g. when graphing vs. displaying the output of an
-expression), only some of these types are legal as the result of a
-user-specified expression.
-For [instant queries](api.md#instant-queries), any of the above data types are allowed as the root of the expression.
-[Range queries](api.md#range-queries) only support scalar-typed and instant-vector-typed expressions.
+* Prometheus's expression language's expression OR sub-expression
+  * 's result's ALLOWED types
+    * **Instant vector**
+      * == time series / 
+        * has 1! sample / EACH time series
+        * ALL share the SAME timestamp
+          * -> NOT displayed | Prometheus UI
+      ```
+      metric_name{labels} value
+      ```
+    * **Range vector**
+      * == time series /
+        * has a range of data points | time / EACH time series
+      ```
+      metric_name{labels} value @timestamp
+      ```
+    * **Scalar**
+      * == simple numeric floating point value
+      ```
+      {labels} value
+      ```
+    * **String**
+      * == simple string value
+        * ⚠️CURRENTLY unused⚠️
 
 _Notes about the experimental native histograms:_
 
@@ -84,75 +111,49 @@ Example:
 
 ### Float literals and time durations
 
-Scalar float values can be written as literal integer or floating-point numbers
-in the format (whitespace only included for better readability):
+* ways to write scalar float values
+  * literal integer OR
+  * literal floating-point numbers
 
+    ```text
     [-+]?(
           [0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?
         | 0[xX][0-9a-fA-F]+
         | [nN][aA][nN]
         | [iI][nN][fF]
     )
+    ```
 
-Examples:
+* | decimal OR hexadecimal digits,
+  * recommendations
+    * use underscores (`_`)
+      * Reason:🧠improve readability🧠
 
-    23
-    -2.43
-    3.4e-9
-    0x8f
-    -Inf
-    NaN
-
-Additionally, underscores (`_`) can be used in between decimal or hexadecimal
-digits to improve readability.
-
-Examples:
-
-    1_000_000
-    .123_456_789
-    0x_53_AB_F3_82
-
-Float literals are also used to specify durations in seconds. For convenience,
-decimal integer numbers may be combined with the following
-time units:
-
-* `ms` – milliseconds
-* `s` – seconds – 1s equals 1000ms
-* `m` – minutes – 1m equals 60s (ignoring leap seconds)
-* `h` – hours – 1h equals 60m
-* `d` – days – 1d equals 24h (ignoring so-called daylight saving time)
-* `w` – weeks – 1w equals 7d
-* `y` – years – 1y equals 365d (ignoring leap days)
-
-Suffixing a decimal integer number with one of the units above is a different
-representation of the equivalent number of seconds as a bare float literal.
-
-Examples:
-
-    1s # Equivalent to 1.
-    2m # Equivalent to 120.
-    1ms # Equivalent to 0.001.
-    -2h # Equivalent to -7200.
-
-The following examples do _not_ work:
-
-    0xABm # No suffixing of hexadecimal numbers.
-    1.5h # Time units cannot be combined with a floating point.
-    +Infd # No suffixing of ±Inf or NaN.
-
-Multiple units can be combined by concatenation of suffixed integers. Units
-must be ordered from the longest to the shortest. A given unit must only appear
-once per float literal.
-
-Examples:
-
-    1h30m # Equivalent to 5400s and thus 5400.
-    12h34m56s # Equivalent to 45296s and thus 45296.
-    54s321ms # Equivalent to 54.321.
+* durations
+  * uses
+    * `integerNumber` + `durationTimeUnit`
+      * if you
+        * do NOT specify `durationTimeUnit` -> `s`
+        * specify NOT integers -> NOT valid❌
+      * 💡they can be concatenated💡/
+        * order units: longest -- to -- shortest
+  * ALLOWED time units
+    * `ms`
+    * `s`
+    * `m`
+    * `h`
+    * `d`
+      * == days
+    * `w`
+      * == weeks
+    * `y`
+      * == years
 
 ## Time series selectors
 
-These are the basic building-blocks that instruct PromQL what data to fetch.
+* == basic building-blocks /
+  * uses
+    * what data / PromQL must fetch
 
 ### Instant vector selectors
 

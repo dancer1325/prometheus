@@ -1,0 +1,14 @@
+### 0. status       NOT exist
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/status
+
+### 1. CURRENT configuration
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/status/config
+
+### 2. CL flags / used -- to -- configure Prometheus
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/status/flags
+
+
+### 3. Runtime Information
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/status/runtimeinfo
+
+### TODO:

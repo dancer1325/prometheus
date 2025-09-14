@@ -3,89 +3,96 @@ title: HTTP API
 sort_rank: 7
 ---
 
-The current stable HTTP API is reachable under `/api/v1` on a Prometheus
-server. Any non-breaking additions will be added under that endpoint.
+* `/api/v1`
+  * Prometheus server's CURRENT 👀HOST 👀HTTP API
+    * any NON-breaking additions will be added | this host
 
 ## Format overview
 
-The API response format is JSON. Every successful API request returns a `2xx`
-status code.
+* API response
+  * syntax
+      ```json
+      {
+        "status": "success" | "error",
+        "data": <data>,
+      
+        // Only set if status is "error". The data field may still hold
+        // additional data.
+        "errorType": "<string>",
+        "error": "<string>",
+      
+        // OPTIONAL
+        // if there were warnings | execute the request -> appear
+        // NOT interrupt request execution
+        "warnings": ["<string>"],
+        
+        // OPTIONAL
+        // if there were info-level annotations | execute the request -> appear
+        "infos": ["<string>"]
+      }
+      ```
+  * 's format
+    * JSON
+  * 's status code -- `status` --
+    * if 
+      * succeed ->  == `2xx`
+      * failure &
+        * parameters are missing OR incorrect -> `400 Bad Request`
+        * expression can NOT be executed -> `422 Unprocessable Entity`
+          * [RFC4918](https://tools.ietf.org/html/rfc4918#page-78) 
+        * queries time out OR abort -> `503 Service Unavailable`
+ 
+* generic placeholders
+  * `<rfc3339 | unix_timestamp>`
+    * use cases
+      * input timestamps ALLOWED formats
+        * [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) format 
+        * Unix timestamp | seconds + OPTIONAL decimal places | sub-second precision
+      * output timestamps ALLOWED formats
+        * Unix timestamps | seconds
+  * `<series_selector>`
+    * == Prometheus [time series selectors](basics.md#time-series-selectors) / 
+      * special characters are URL-encoded
+      * _Example:_ `GET /api/v1/query?query=<series_selector>` 
+  * `<duration>`
+    * [Prometheus float literals / use time units](basics.md#float-literals-and-time-durations)
+  * `<bool>`
 
-Invalid requests that reach the API handlers return a JSON error object
-and one of the following HTTP response codes:
-
-- `400 Bad Request` when parameters are missing or incorrect.
-- `422 Unprocessable Entity` when an expression can't be executed
-  ([RFC4918](https://tools.ietf.org/html/rfc4918#page-78)).
-- `503 Service Unavailable` when queries time out or abort.
-
-Other non-`2xx` codes may be returned for errors occurring before the API
-endpoint is reached.
-
-An array of warnings may be returned if there are errors that do
-not inhibit the request execution. An additional array of info-level
-annotations may be returned for potential query issues that may or may
-not be false positives. All of the data that was successfully collected
-will be returned in the data field.
-
-The JSON response envelope format is as follows:
-
-```json
-{
-  "status": "success" | "error",
-  "data": <data>,
-
-  // Only set if status is "error". The data field may still hold
-  // additional data.
-  "errorType": "<string>",
-  "error": "<string>",
-
-  // Only set if there were warnings while executing the request.
-  // There will still be data in the data field.
-  "warnings": ["<string>"],
-  // Only set if there were info-level annotations while executing the request.
-  "infos": ["<string>"]
-}
-```
-
-Generic placeholders are defined as follows:
-
-* `<rfc3339 | unix_timestamp>`: Input timestamps may be provided either in
-[RFC3339](https://www.ietf.org/rfc/rfc3339.txt) format or as a Unix timestamp
-in seconds, with optional decimal places for sub-second precision. Output
-timestamps are always represented as Unix timestamps in seconds.
-* `<series_selector>`: Prometheus [time series
-selectors](basics.md#time-series-selectors) like `http_requests_total` or
-`http_requests_total{method=~"(GET|POST)"}` and need to be URL-encoded.
-* `<duration>`: [the subset of Prometheus float literals using time units](basics.md#float-literals-and-time-durations).
-For example, `5m` refers to a duration of 5 minutes.
-* `<bool>`: boolean values (strings `true` and `false`).
-
-Note: Names of query parameters that may be repeated end with `[]`.
+* query parameters
+  * 👀if you want to repeat it -> `queryParameter[]`👀
 
 ## Expression queries
 
-Query language expressions may be evaluated at a single instant or over a range
-of time. The sections below describe the API endpoints for each type of
-expression query.
+* goal
+  * API endpoints / EACH expression query type
 
 ### Instant queries
 
-The following endpoint evaluates an instant query at a single point in time:
+* == query language expressions / 👀evaluated | 1! instant 👀
 
-```
-GET /api/v1/query
-POST /api/v1/query
-```
+* 👀URL query parameters👀
+  - `query=<string>`
+    - == Prometheus expression query string
+      - == ⚠️`<string>` == PromQL expression⚠️
+    - ⚠️MANDATORY⚠️
+  - `time=<rfc3339 | unix_timestamp>`
+    - == evaluate timestamp
+    - OPTIONAL
+  - `timeout=<duration>`
+    - == evaluate timeout
+      - == MAXIMUM execution time BEFORE rejecting it
+      - Reason:🧠| complex queries, avoid INDEFINITE resources🧠
+    - OPTIONAL
+      - default value, specified -- via -- `-query.timeout`
+  - `limit=<number>`
+    - == MAXIMUM number of returned series
+      - | matrices & vectors
+      - ❌NOT affect | scalars or strings ❌
+    - OPTIONAL
+      - by default, 0
+        - == disabled
 
-URL query parameters:
-
-- `query=<string>`: Prometheus expression query string.
-- `time=<rfc3339 | unix_timestamp>`: Evaluation timestamp. Optional.
-- `timeout=<duration>`: Evaluation timeout. Optional. Defaults to and
-   is capped by the value of the `-query.timeout` flag.
-- `limit=<number>`: Maximum number of returned series. Doesn’t affect scalars or strings but truncates the number of series for matrices and vectors. Optional. 0 means disabled.
-
+* TODO:
 The current server time is used if the `time` parameter is omitted.
 
 You can URL-encode these parameters directly in the request body by using the `POST` method and
@@ -141,6 +148,7 @@ curl 'http://localhost:9090/api/v1/query?query=up&time=2015-07-01T20:10:51.781Z'
 
 ### Range queries
 
+* == query language expressions / evaluated | range of time
 The following endpoint evaluates an expression query over a range of time:
 
 ```
@@ -1147,100 +1155,44 @@ curl http://localhost:9090/api/v1/alertmanagers
 
 ## Status
 
-Following status endpoints expose current Prometheus configuration.
+* goal
+  * 👀CURRENT Prometheus configuration👀
 
 ### Config
-
-The following endpoint returns currently loaded configuration file:
 
 ```
 GET /api/v1/status/config
 ```
-
-The config is returned as dumped YAML file. Due to limitation of the YAML
-library, YAML comments are not included.
-
-```bash
-curl http://localhost:9090/api/v1/status/config
-```
-
-```json
-{
-  "status": "success",
-  "data": {
-    "yaml": "<content of the loaded config file in YAML>",
-  }
-}
-```
+* 's return
+  * CURRENT loaded configuration file | YAML format /
+    * skip YAML comments
+      * Reason: 🧠YAML library restrictions🧠
 
 ### Flags
-
-The following endpoint returns flag values that Prometheus was configured with:
 
 ```
 GET /api/v1/status/flags
 ```
 
-All values are of the result type `string`.
-
-```bash
-curl http://localhost:9090/api/v1/status/flags
-```
-
-```json
-{
-  "status": "success",
-  "data": {
-    "alertmanager.notification-queue-capacity": "10000",
-    "alertmanager.timeout": "10s",
-    "log.level": "info",
-    "query.lookback-delta": "5m",
-    "query.max-concurrency": "20",
-    ...
-  }
-}
-```
-
-*New in v2.2*
+* requirements
+  * Prometheus v2.2+
+* 's return
+  * CL flag / 
+    * used -- to -- configure Prometheus
+    * 's value `: string`
 
 ### Runtime Information
-
-The following endpoint returns various runtime information properties about the Prometheus server:
 
 ```
 GET /api/v1/status/runtimeinfo
 ```
 
-The returned values are of different types, depending on the nature of the runtime property.
-
-```bash
-curl http://localhost:9090/api/v1/status/runtimeinfo
-```
-
-```json
-{
-  "status": "success",
-  "data": {
-    "startTime": "2019-11-02T17:23:59.301361365+01:00",
-    "CWD": "/",
-    "hostname" : "DESKTOP-717H17Q",
-    "serverTime": "2025-01-05T18:27:33Z",
-    "reloadConfigSuccess": true,
-    "lastConfigTime": "2019-11-02T17:23:59+01:00",
-    "timeSeriesCount": 873,
-    "corruptionCount": 0,
-    "goroutineCount": 48,
-    "GOMAXPROCS": 4,
-    "GOGC": "",
-    "GODEBUG": "",
-    "storageRetention": "15d"
-  }
-}
-```
-
-NOTE: The exact returned runtime properties may change without notice between Prometheus versions.
-
-*New in v2.14*
+* requirements
+  * Prometheus v2.14+
+* 's return
+  * Prometheus server's runtime information properties
+    * BETWEEN Prometheus versions,
+      * WITHOUT notice, they can change
 
 ### Build Information
 

@@ -1,0 +1,45 @@
+### 1. Instant queries
+#   1.1 ?query
+#   1.1.1 if you do NOT pass ?query     -> error
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query
+
+### 1.1.2   pass ?query         -> FINE
+# Reason: MANDATORY
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up
+
+### 1.2 POST instant query
+POST {{PROMETHEUS_SERVER_HOST}}/api/v1/query
+Content-Type: application/x-www-form-urlencoded
+
+query=up
+
+### 1.3 ?query=<string>
+# <string>      ==      PromQL expression
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=http_requests_total{job="apiserver"}
+###
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=rate(http_requests_total[5m])
+
+### 1.4 time=<rfc3339 | unix_timestamp>
+#   1.4.1  time=rfc3339
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&time=2025-09-14T20:30:00Z
+### 1.4.2  time=unix_timestamp
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&time=1757873400
+
+### 1.5 timeout=<duration>
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=sum(rate(http_requests_total[5m]))&timeout=10s
+
+### 1.6 limit=<number>
+#   1.6.1   NOT specified     ==      0       == return ALL
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up
+### 1.6.2   limit=number
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&limit=2
+### 1.6.3   NOT affect | scalars
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=count(up)&limit=3
+
+
+### 2. Range queries
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2023-01-01T00:00:00Z&end=2023-01-01T01:00:00Z&step=15s
+
+### Range query with rate function
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=rate(http_requests_total[5m])&start=2023-01-01T00:00:00Z&end=2023-01-01T01:00:00Z&step=30s
+
