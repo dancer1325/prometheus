@@ -1,100 +1,144 @@
 ## Overview
 
-The `ui` directory contains the following subdirectories:
-
-* `mantine-ui`: The new (3.x) React-based web UI for Prometheus.
-* `react-app`: The old (2.x) React-based web UI for Prometheus.
-* `modules`: Shared npm modules for PromQL code editing via [CodeMirror](https://codemirror.net/), which are used by both React apps and external consumers (like [Thanos](https://thanos.io/)).
-* `static`: The build output directory for both React apps. The files in this directory are compiled into the Prometheus binary unless built-in assets are disabled (see the section on this below).
-
-The directory also contains helper files for building and compiling the UI assets for both React application versions into the Prometheus binary.
-
-Prometheus serves the new UI by default, but you can still use the Prometheus server feature flag `--enable-feature=old-ui` to switch back to the old UI for the time being.
-
-While both the `mantine-ui` and `modules` directories are part of the same shared npm workspace, the old UI in the `react-app` directory has been separated out of the workspace setup, since its dependencies were too incompatible to integrate.
+* ==
+  * `mantine-ui`
+    * Prometheus' NEW React-based web UI 
+      * 👀by default, served by Prometheus👀
+    * | npm workspace == `modules` | npm workspace
+    * hot-reload
+      * == if you edit the source code -> reload the app
+  * `react-app`
+    * Prometheus' ⚠️OLD (2.x)⚠️ React-based web UI
+      * if you want to use it -> `--enable-feature=old-ui`
+    * hot-reload
+  * `modules`
+    * == shared npm modules
+      * allows
+        * editing PromQL code 
+          * -- via -- [CodeMirror](https://codemirror.net/)
+    * uses
+      * React apps
+      * external consumers
+        * _Examples:_ [Thanos](https://thanos.io/)
+    * ❌NOT hot reload ❌ -> make 
+      * | this path,
+        ```
+        npm run build:module
+        ```
+  * `static`
+    * == BOTH (NEW & OLD) React apps' build output directory 
+    * compiled | Prometheus binary
+      * you can disable it
+  * helper files / 
+    * build BOTH React application's UI assets
+    * compile BOTH React application's UI assets | Prometheus binary
 
 ### Pre-requisites
-
-To be able to build either of the React applications, you will need:
 
 * npm >= v10
 * node >= v22
 
 ### Installing npm dependencies
 
-To install all required [npm](https://www.npmjs.com/) package dependencies and also build the local workspace npm modules, run this command from the root of the repository:
+* | root path
+    ```bash
+    make ui-build
+    ```
+  * == | this path,
+    ```
+    bash build_ui.sh --all
+    ```
 
-```bash
-make ui-build
-```
+* recommendations
+  * | [mantine-ui/](mantine-ui) OR ANY [module/](module)'s sub folder,
+    * ❌NOT run `npm install`❌
+      * Reason: 🧠MUST be installed ONLY -- via -- "web/ui"'s npm workspace setup 
 
-This will run `npm install` both in the main `web/ui` workspace directory, as well as in the `web/ui/react-app` directory, and it will further run `npm run build` in both directories to make sure that both apps and their dependencies are built correctly.
+### how to run local development server?
 
-npm consults the `package.json` and `package-lock.json` files for dependencies to install. It creates a `node_modules` directory with all installed dependencies.
+* if you want to run 
+  * NEW React app,
+    * | this path,
+      ```
+      npm run start
+      ```
+    * | browser, 
+      * http://localhost:5173/
+  * OLD UI,
+    * | "[react-app/](react-app)",
+      ```
+      npm run start
+      ```
+    * | browser,
+      * http://localhost:5173/
 
-**NOTE**: Do not run `npm install` directly in the `mantine-ui` folder or in any sub folder of the `module` directory - dependencies for these should be installed only via the npm workspace setup from `web/ui`.
+### Proxying API requests -- to a -- Prometheus backend server
 
-### Running a local development server
-
-You can start a development server for the new React UI outside of a running Prometheus server by running:
-
-    npm start
-
-(For the old UI, you will have to run the same command from the `react-app` subdirectory.)
-
-This will start the development server on http://localhost:5173/. The page will hot-reload if you make edits to the source code. You will also see any lint errors in the console.
-
-**NOTE**: Hot reloads will only work for code in the `mantine-ui` and `react-app` folders. For changes in the `module` directory (the CodeMirror PromQL editor code) to become visible, you will need to run `npm run build:module` from `web/ui`.
-
-### Proxying API requests to a Prometheus backend server
-
-To do anything useful, the web UI requires a Prometheus backend to fetch and display data from. Due to a proxy configuration in the `mantine-ui/vite.config.ts` file, the development web server proxies any API requests from the UI to `http://localhost:9090`. This allows you to run a normal Prometheus server to handle API requests, while iterating separately on the UI:
+* web UI
+  * can
+    * fetch data -- from -- Prometheus server  
+    * display data -- from -- Prometheus server
+  * requires
+    * | [mantine-ui/vite.config.ts](mantine-ui/vite.config.ts),
+      * ⚠️proxy configuration ⚠️ 
 
     [browser] ----> [localhost:5173 (dev server)] --(proxy API requests)--> [localhost:9090 (Prometheus)]
 
-If you prefer, you can also change the `mantine-ui/vite.config.ts` file to point to a any other Prometheus server. Note that connecting to an HTTPS-based server will require an additional `changeOrigin: true` setting. For example, to connect to the demo server at `https://prometheus.demo.prometheus.io/`, you could change the `vite.config.ts` file to:
+* proxy configuration
+  * if you want to connect to HTTPS-based server -> set `changeOrigin: true`
+    * _Example:_ Prometheus server | https://prometheus.demo.prometheus.io/
 
-```typescript
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-
-// https://vitejs.dev/config/
-export default defineConfig({
-  base: '',
-  plugins: [react()],
-  server: {
-    proxy: {
-      "/api": {
-        target: "https://prometheus.demo.prometheus.io/",
-        changeOrigin: true,
+    ```typescript, title=vite.config.ts
+    import { defineConfig } from "vite";
+    import react from "@vitejs/plugin-react";
+    
+    // https://vitejs.dev/config/
+    export default defineConfig({
+      base: '',
+      plugins: [react()],
+      server: {
+        proxy: {
+          "/api": {
+            target: "https://prometheus.demo.prometheus.io/",
+            changeOrigin: true,
+          },
+          "/-/": {
+            target: "https://prometheus.demo.prometheus.io/",
+            changeOrigin: true,
+          },
+        },
       },
-      "/-/": {
-        target: "https://prometheus.demo.prometheus.io/",
-        changeOrigin: true,
-      },
-    },
-  },
-});
-```
+    });
+    ```
 
-### Running tests
+### how to run tests?
 
-To run the tests for the new React app and for all modules:
+* if you want to run tests -- for -- 
+  * NEW React app & ALL modules
+    * | this path,
+      ```bash
+      npm run test
+      ```
+  * OLD UI, 
+    * | "[react-app/](react-app)"
+      ```bash
+      npm run test
+      ```
+  * specific module,
+    * | "[module/](module)"
+      ```bash
+      npm run test
+      ```
 
-```bash
-npm test
-```
-
-(For the old UI, you would have to run the same command from the `react-app` subdirectory.)
-
-To run the tests only for a specific module, change to the module's directory and run `npm test` from there.
-
-By default, `npm test` will run the tests in an interactive watch mode. This means that it will keep running the tests when you change any source files.
-To run the tests only once and then exit, use the `CI=true` environment variable:
-
-```bash
-CI=true npm test
-```
+* ways to run tests
+  * interactive watch mode
+    ```bash
+    npm run test
+    ```
+  * ONLY 1! & then exit
+    ```bash
+    CI=true npm test
+    ```
 
 ### Building the app for production
 
@@ -102,7 +146,8 @@ To build a production-optimized version of both React app versions to the `stati
 
     npm run build
 
-**NOTE:** You will likely not need to do this directly. Instead, this is taken care of by the `build` target in the main Prometheus `Makefile` when building the full binary.
+**NOTE:** You will likely not need to do this directly
+* Instead, this is taken care of by the `build` target in the main Prometheus `Makefile` when building the full binary.
 
 ### Upgrading npm dependencies
 
@@ -125,13 +170,15 @@ This installs dependencies via npm, builds a production build of both React apps
 
 By default, the built web assets are compressed (via the main Makefile) and statically compiled into the Prometheus binary using Go's `embed` package.
 
-During development it can be convenient to tell the Prometheus server to always serve its web assets from the local filesystem (in the `web/ui/static` build output directory) without having to recompile the Go binary. To make this work, remove the `builtinassets` build tag in the `flags` entry in `.promu.yml`, and then run `make build` (or build Prometheus using `go build ./cmd/prometheus`).
+During development it can be convenient to tell the Prometheus server to always serve its web assets from the local filesystem (in the `web/ui/static` build output directory) without having to recompile the Go binary
+* To make this work, remove the `builtinassets` build tag in the `flags` entry in `.promu.yml`, and then run `make build` (or build Prometheus using `go build ./cmd/prometheus`).
 
 Note that in most cases, it is even more convenient to just use the development web server via `npm start` as mentioned above, since serving web assets like this from the filesystem still requires rebuilding those assets via `make ui-build` (or `npm run build`) before they can be served.
 
 ### Using prebuilt UI assets
 
-If you are only working on the Prometheus Go backend and don't want to bother with the dependencies or the time required for producing UI builds, you can use the prebuilt web UI assets available with each Prometheus release (`prometheus-web-ui-<version>.tar.gz`). This allows you to skip building the UI from source.
+If you are only working on the Prometheus Go backend and don't want to bother with the dependencies or the time required for producing UI builds, you can use the prebuilt web UI assets available with each Prometheus release (`prometheus-web-ui-<version>.tar.gz`)
+* This allows you to skip building the UI from source.
 
 1. Download and extract the prebuilt UI tarball:
    ```bash

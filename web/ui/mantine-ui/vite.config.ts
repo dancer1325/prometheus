@@ -6,6 +6,7 @@ export default defineConfig({
   base: '',
   plugins: [react()],
   server: {
+    // proxy -- to -- Prometheus server
     proxy: {
       "/api": {
         target: "http://localhost:9090",
