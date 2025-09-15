@@ -1,4 +1,4 @@
-### 1. Instant queries
+### 1. Instant queries  -- /api/v1/query --
 #   1.1 ?query
 #   1.1.1 if you do NOT pass ?query     -> error
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query
@@ -24,6 +24,8 @@ GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=rate(http_requests_total[5m])
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&time=2025-09-14T20:30:00Z
 ### 1.4.2  time=unix_timestamp
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&time=1757873400
+### 1.4.3   if it's ommitted -> use CURRENT server time
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up
 
 ### 1.5 timeout=<duration>
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=sum(rate(http_requests_total[5m]))&timeout=10s
@@ -37,9 +39,55 @@ GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&limit=2
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=count(up)&limit=3
 
 
-### 2. Range queries
-GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2023-01-01T00:00:00Z&end=2023-01-01T01:00:00Z&step=15s
+### 2. Range queries   --   /api/v1/query_range  --
 
-### Range query with rate function
-GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=rate(http_requests_total[5m])&start=2023-01-01T00:00:00Z&end=2023-01-01T01:00:00Z&step=30s
+##  2.1 ?query       MANDATORY
+### 2.1.1 if you do NOT pass ?query     -> error
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?start=2023-01-01T00:00:00Z&end=2023-01-01T01:00:00Z&step=15s
+### 2.1.2 pass ?query     -> fine
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2025-09-15T00:00:00Z&end=2025-09-15T14:50:00Z&step=15s
+
+##  2.2 ?start       MANDATORY
+### 2.2.1 if you do NOT pass ?start     -> error
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&end=2023-01-01T01:00:00Z&step=15s
+### 2.2.2 pass ?start     -> fine
+### 2.2.2.1 rfc339
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2025-09-15T00:00:00Z&end=2025-09-15T14:50:00Z&step=15s
+### 2.2.2.2 unix_timestamp          (2025-09-15T00:00:00Z = 1757865600)
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000&step=15s
+
+##  2.3 ?end       MANDATORY
+### 2.3.1 if you do NOT pass ?end     -> error
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&step=15s
+### 2.3.2 pass ?end     -> fine
+### 2.3.2.1 rfc339
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2025-09-15T00:00:00Z&end=2025-09-15T14:50:00Z&step=15s
+### 2.3.2.2 unix_timestamp          (2025-09-15T14:50:00Z = 1757919000)
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000&step=15s
+
+##  2.4 ?step       MANDATORY
+### 2.4.1 if you do NOT pass ?step     -> error
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000
+### 2.4.2 pass ?step     -> fine
+### 2.4.2.1 duration
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2025-09-15T00:00:00Z&end=2025-09-15T14:50:00Z&step=15s
+### 2.4.2.2 float
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000&step=15.0
+
+### 2.5 timeout=<duration>
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000&step=15.0&timeout=10s
+
+### 2.6 limit=<number>
+#   2.6.1   NOT specified     ==      0       == return ALL
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000&step=15.0
+### 2.6.2   limit=number
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=1757865600&end=1757919000&step=15.0&limit=2
+### 2.6.3   NOT affect | scalars
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=count(up)&start=1757865600&end=1757919000&step=15.0&limit=3
+
+### 2.7 POST range query
+POST {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range
+Content-Type: application/x-www-form-urlencoded
+
+query=up&start=1757865600&end=1757919000&step=15.0
 

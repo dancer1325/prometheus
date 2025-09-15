@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'apiserver'
+    static_configs:
+      - targets: ['localhost:8080', 'localhost:8081', 'localhost:8082']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+  
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['localhost:9100', 'localhost:9101', 'localhost:9102']
+    scrape_interval: 15s
+  
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s

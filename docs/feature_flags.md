@@ -3,14 +3,18 @@ title: Feature flags
 sort_rank: 12
 ---
 
-Here is a list of features that are disabled by default since they are breaking changes or are considered experimental.
-Their behaviour can change in future releases which will be communicated via the [release changelog](https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md).
-
-You can enable them using the `--enable-feature` flag with a comma separated list of features.
-They may be enabled by default in future versions.
+* features
+  * by default, disabled
+    * Reason:🧠they are 
+      * breaking changes OR
+      * experimental🧠
+  * [release changelog](https://github.com/prometheus/prometheus/blob/main/CHANGELOG.md)
+  * `--enable-feature=feature1,feature2, ...`
+    * ways to enable the features
 
 ## Exemplars storage
 
+* TODO:
 `--enable-feature=exemplar-storage`
 
 [OpenMetrics](https://github.com/prometheus/OpenMetrics/blob/v1.0.0/specification/OpenMetrics.md#exemplars) introduces the ability for scrape targets to add exemplars to certain metrics. Exemplars are references to data outside of the MetricSet. A common use case are IDs of program traces.
@@ -49,25 +53,35 @@ computed at all.
 
 `--enable-feature=native-histograms`
 
-When enabled, Prometheus will ingest native histograms (formerly also known as
-sparse histograms or high-res histograms). Native histograms are still highly
-experimental. Expect breaking changes to happen (including those rendering the
-TSDB unreadable).
+* types of histograms
+  * classic
+    * \| text format,
+      * default one == disabled the feature
+  * native
 
-Native histograms are currently only supported in the traditional Prometheus
-protobuf exposition format. This feature flag therefore also enables a new (and
-also experimental) protobuf parser, through which _all_ metrics are ingested
-(i.e. not only native histograms). Prometheus will try to negotiate the
-protobuf format first. The instrumented target needs to support the protobuf
-format, too, _and_ it needs to expose native histograms. The protobuf format
-allows to expose classic and native histograms side by side. With this feature
-flag disabled, Prometheus will continue to parse the classic histogram (albeit
-via the text format). With this flag enabled, Prometheus will still ingest
-those classic histograms that do not come with a corresponding native
-histogram. However, if a native histogram is present, Prometheus will ignore
-the corresponding classic histogram, with the notable exception of exemplars,
-which are always ingested. To keep the classic histograms as well, enable
-`always_scrape_classic_histograms` in the scrape job.
+* allows
+  * Prometheus ingest native histograms (FORMERLY, sparse histograms OR high-res histograms)
+* supported |
+  * ⚠️traditional Prometheus protobuf exposition format⚠️
+    * -> enables an experimental protobuf parser / 
+      * through which, ALL metrics are ingested
+
+* | Prometheus scrap target's metrics,
+  * ALLOWED formats
+    * text (== traditional)
+    * protobuf (== binary)
+      * preferred one -- by -- Prometheus
+      * can handle SIMULTANEOUSLY
+        * classic histograms 
+          * ⚠️if a native histogram exist -> Prometheus ignore the classic histogram⚠️
+            * if you want it -> enable `always_scrape_classic_histograms` | scrape job
+            * EXCEPTION: exemplars
+              * == ALWAYS ingested
+        * native histograms
+  * steps
+    * negotiation format process
+      * == MUST be supported by Prometheus & instrumented target
+    * check instrumented target exposes native histograms
 
 ## Experimental PromQL functions
 

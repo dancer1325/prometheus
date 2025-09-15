@@ -3,131 +3,43 @@ title: Getting started
 sort_rank: 1
 ---
 
-This guide is a "Hello World"-style tutorial which shows how to install,
-configure, and use a simple Prometheus instance. You will download and run
-Prometheus locally, configure it to scrape itself and an example application,
-then work with queries, rules, and graphs to use collected time
-series data.
+* goal
+  * how to 
+    * install,
+    * configure /
+      * scrape itself & example application 
+    * use 1 simple Prometheus instance
+    * work with queries + rules + graphs /
+      * used | collected time series data
 
-## Downloading and running Prometheus
-
-[Download the latest release](https://prometheus.io/download) of Prometheus for
-your platform, then extract and run it:
-
-```bash
-tar xvfz prometheus-*.tar.gz
-cd prometheus-*
-```
-
-Before starting Prometheus, let's configure it.
+## Downloading
+* [here](installation.md)
 
 ## Configuring Prometheus to monitor itself
 
-Prometheus collects metrics from _targets_ by scraping metrics HTTP
-endpoints. Since Prometheus exposes data in the same
-manner about itself, it can also scrape and monitor its own health.
-
-While a Prometheus server that collects only data about itself is not very
-useful, it is a good starting example. Save the following basic
-Prometheus configuration as a file named `prometheus.yml`:
-
-```yaml
-global:
-  scrape_interval:     15s # By default, scrape targets every 15 seconds.
-
-  # Attach these labels to any time series or alerts when communicating with
-  # external systems (federation, remote storage, Alertmanager).
-  external_labels:
-    monitor: 'codelab-monitor'
-
-# A scrape configuration containing exactly one endpoint to scrape:
-# Here it's Prometheus itself.
-scrape_configs:
-  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
-  - job_name: 'prometheus'
-
-    # Override the global default and scrape targets from this job every 5 seconds.
-    scrape_interval: 5s
-
-    static_configs:
-      - targets: ['localhost:9090']
-```
-
-For a complete specification of configuration options, see the
-[configuration documentation](configuration/configuration.md).
+* Prometheus
+  * collects targets' metrics
+    * -- by -- scraping metrics HTTP endpoints
+    * 💡EVEN OWN Prometheus' metrics💡
+      * Reason:🧠Prometheus exposes data🧠
 
 ## Starting Prometheus
 
-To start Prometheus with your newly created configuration file, change to the
-directory containing the Prometheus binary and run:
-
-```bash
-# Start Prometheus.
-# By default, Prometheus stores its database in ./data (flag --storage.tsdb.path).
-./prometheus --config.file=prometheus.yml
-```
-
-Prometheus should start up. You should also be able to browse to a status page
-about itself at [localhost:9090](http://localhost:9090). Give it a couple of
-seconds to collect data about itself from its own HTTP metrics endpoint.
-
-You can also verify that Prometheus is serving metrics about itself by
-navigating to its metrics endpoint:
-[localhost:9090/metrics](http://localhost:9090/metrics)
-
-## Using the expression browser
-
-Let us explore data that Prometheus has collected about itself. To
-use Prometheus's built-in expression browser, navigate to
-http://localhost:9090/graph and choose the "Table" view within the "Graph" tab.
-
-As you can gather from [localhost:9090/metrics](http://localhost:9090/metrics),
-one metric that Prometheus exports about itself is named
-`prometheus_target_interval_length_seconds` (the actual amount of time between
-target scrapes). Enter the below into the expression console and then click "Execute":
-
-```
-prometheus_target_interval_length_seconds
-```
-
-This should return a number of different time series (along with the latest value
-recorded for each), each with the metric name
-`prometheus_target_interval_length_seconds`, but with different labels. These
-labels designate different latency percentiles and target group intervals.
-
-If we are interested only in 99th percentile latencies, we could use this
-query:
-
-```
-prometheus_target_interval_length_seconds{quantile="0.99"}
-```
-
-To count the number of returned time series, you could write:
-
-```
-count(prometheus_target_interval_length_seconds)
-```
-
-For more about the expression language, see the
-[expression language documentation](querying/basics.md).
+* | start Prometheus,
+  * 👀Prometheus create its database👀
+    * by default, | "./data/"
+    * if you want to specify the location -> CL flag `--storage.tsdb.path`
+  * [localhost:9090/metrics](http://localhost:9090/metrics)
+    * == 💡metrics / served -- by -- Prometheus💡
+      * _Example:_ `prometheus_target_interval_length_seconds`
 
 ## Using the graphing interface
 
-To graph expressions, navigate to http://localhost:9090/graph and use the "Graph"
-tab.
-
-For example, enter the following expression to graph the per-second rate of chunks
-being created in the self-scraped Prometheus:
-
-```
-rate(prometheus_tsdb_head_chunks_created_total[1m])
-```
-
-Experiment with the graph range parameters and other settings.
+* | http://localhost:9090/query & "Graph" tab
 
 ## Starting up some sample targets
 
-Let's add additional targets for Prometheus to scrape.
+* TODO: Let's add additional targets for Prometheus to scrape.
 
 The Node Exporter is used as an example target, for more information on using it
 [see these instructions.](https://prometheus.io/docs/guides/node-exporter/)

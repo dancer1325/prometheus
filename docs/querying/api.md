@@ -6,6 +6,17 @@ sort_rank: 7
 * `/api/v1`
   * Prometheus server's CURRENT 👀HOST 👀HTTP API
     * any NON-breaking additions will be added | this host
+    * 👀ALLOWED HTTP methods👀
+      * GET
+        * recommended ones
+        * ⚠️cons⚠️
+          * length restrictions -- [2048,8192] characters --
+      * POST
+        * URL parameters -> set | request body 
+        * requirements
+          * `-H Content-Type: application/x-www-form-urlencoded`
+        * pros
+          * NO length restrictions
 
 ## Format overview
 
@@ -41,7 +52,7 @@ sort_rank: 7
         * expression can NOT be executed -> `422 Unprocessable Entity`
           * [RFC4918](https://tools.ietf.org/html/rfc4918#page-78) 
         * queries time out OR abort -> `503 Service Unavailable`
- 
+
 * generic placeholders
   * `<rfc3339 | unix_timestamp>`
     * use cases
@@ -69,15 +80,21 @@ sort_rank: 7
 ### Instant queries
 
 * == query language expressions / 👀evaluated | 1! instant 👀
+* syntax
+    ```
+    GET /api/v1/query
+    POST /api/v1/query
+    ```
 
 * 👀URL query parameters👀
   - `query=<string>`
-    - == Prometheus expression query string
+    - == 👀Prometheus expression query string👀
       - == ⚠️`<string>` == PromQL expression⚠️
     - ⚠️MANDATORY⚠️
   - `time=<rfc3339 | unix_timestamp>`
     - == evaluate timestamp
     - OPTIONAL
+      - if it's omitted -> use CURRENT server time
   - `timeout=<duration>`
     - == evaluate timeout
       - == MAXIMUM execution time BEFORE rejecting it
@@ -92,137 +109,68 @@ sort_rank: 7
       - by default, 0
         - == disabled
 
-* TODO:
-The current server time is used if the `time` parameter is omitted.
-
-You can URL-encode these parameters directly in the request body by using the `POST` method and
-`Content-Type: application/x-www-form-urlencoded` header. This is useful when specifying a large
-query that may breach server-side URL character limits.
-
-The `data` section of the query result has the following format:
-
-```json
-{
-  "resultType": "matrix" | "vector" | "scalar" | "string",
-  "result": <value>
-}
-```
-
-`<value>` refers to the query result data, which has varying formats
-depending on the `resultType`. See the [expression query result
-formats](#expression-query-result-formats).
-
-The following example evaluates the expression `up` at the time
-`2015-07-01T20:10:51.781Z`:
-
-```bash
-curl 'http://localhost:9090/api/v1/query?query=up&time=2015-07-01T20:10:51.781Z'
-```
-
-```json
-{
-   "status" : "success",
-   "data" : {
-      "resultType" : "vector",
-      "result" : [
-         {
-            "metric" : {
-               "__name__" : "up",
-               "job" : "prometheus",
-               "instance" : "localhost:9090"
-            },
-            "value": [ 1435781451.781, "1" ]
-         },
-         {
-            "metric" : {
-               "__name__" : "up",
-               "job" : "node",
-               "instance" : "localhost:9100"
-            },
-            "value" : [ 1435781451.781, "0" ]
-         }
-      ]
-   }
-}
-```
+* API response
+  * 's `data`
+    ```json
+    {
+      "resultType": "matrix" | "vector" | "scalar" | "string",
+      "result": <value>
+    }
+    ```
+    * `<value>`
+      * == 💡query result data💡
+        * 👀['s formats -- depend on the -- `resultType`](#expression-query-result-formats)👀
 
 ### Range queries
 
 * == query language expressions / evaluated | range of time
-The following endpoint evaluates an expression query over a range of time:
+* syntax
+    ```
+    GET /api/v1/query_range
+    POST /api/v1/query_range
+    ```
 
-```
-GET /api/v1/query_range
-POST /api/v1/query_range
-```
+* URL query parameters
+  - `query=<string>`
+    - 👀Prometheus expression query string👀
+      - == ⚠️`<string>` == PromQL expression⚠️
+    - ⚠️MANDATORY⚠️
+  - `start=<rfc3339 | unix_timestamp>`
+    - start timestamp / 
+      - 👀inclusive👀
+    - ⚠️MANDATORY⚠️
+  - `end=<rfc3339 | unix_timestamp>`
+    - End timestamp/
+      - 👀inclusive👀
+    - ⚠️MANDATORY⚠️
+  - `step=<duration | float>`
+    - query resolution step width
+    - ⚠️MANDATORY⚠️
+  - `timeout=<duration>`
+    - Evaluation timeout
+      - == MAXIMUM execution time BEFORE rejecting it
+      - Reason:🧠| complex queries, avoid INDEFINITE resources🧠
+    - OPTIONAL
+      - default value, specified -- via -- `-query.timeout`
+  - `limit=<number>`
+    - == MAXIMUM number of returned series
+      - | matrices & vectors
+      - ❌NOT affect | scalars or strings ❌
+    - OPTIONAL
+      - by default, 0
+        - == disabled
 
-URL query parameters:
-
-- `query=<string>`: Prometheus expression query string.
-- `start=<rfc3339 | unix_timestamp>`: Start timestamp, inclusive.
-- `end=<rfc3339 | unix_timestamp>`: End timestamp, inclusive.
-- `step=<duration | float>`: Query resolution step width in `duration` format or float number of seconds.
-- `timeout=<duration>`: Evaluation timeout. Optional. Defaults to and
-   is capped by the value of the `-query.timeout` flag.
-- `limit=<number>`: Maximum number of returned series. Optional. 0 means disabled.
-
-You can URL-encode these parameters directly in the request body by using the `POST` method and
-`Content-Type: application/x-www-form-urlencoded` header. This is useful when specifying a large
-query that may breach server-side URL character limits.
-
-The `data` section of the query result has the following format:
-
-```json
-{
-  "resultType": "matrix",
-  "result": <value>
-}
-```
-
-For the format of the `<value>` placeholder, see the [range-vector result
-format](#range-vectors).
-
-The following example evaluates the expression `up` over a 30-second range with
-a query resolution of 15 seconds.
-
-```bash
-curl 'http://localhost:9090/api/v1/query_range?query=up&start=2015-07-01T20:10:30.781Z&end=2015-07-01T20:11:00.781Z&step=15s'
-```
-
-```json
-{
-   "status" : "success",
-   "data" : {
-      "resultType" : "matrix",
-      "result" : [
-         {
-            "metric" : {
-               "__name__" : "up",
-               "job" : "prometheus",
-               "instance" : "localhost:9090"
-            },
-            "values" : [
-               [ 1435781430.781, "1" ],
-               [ 1435781445.781, "1" ],
-               [ 1435781460.781, "1" ]
-            ]
-         },
-         {
-            "metric" : {
-               "__name__" : "up",
-               "job" : "node",
-               "instance" : "localhost:9091"
-            },
-            "values" : [
-               [ 1435781430.781, "0" ],
-               [ 1435781445.781, "0" ],
-               [ 1435781460.781, "1" ]
-            ]
-         }
-      ]
-   }
-}
-```
+* API response
+  * 's `data`
+    ```json
+    {
+      "resultType": "matrix",
+      "result": <value>
+    }
+    ```
+    * `<value>`
+      * == 💡query result data💡
+      * [here](#range-vectors)
 
 ## Formatting query expressions
 
@@ -572,17 +520,12 @@ curl -g 'http://localhost:9090/api/v1/query_exemplars?query=test_exemplar_metric
 }
 ```
 
-## Expression query result formats
+## Expression query result formats -- `data.result[*].values` --
 
-Expression queries may return the following response values in the `result`
-property of the `data` section. `<sample_value>` placeholders are numeric
-sample values. JSON does not support special float values such as `NaN`, `Inf`,
-and `-Inf`, so sample values are transferred as quoted JSON strings rather than
-raw numbers.
-
-The keys `"histogram"` and `"histograms"` only show up if the experimental
-native histograms are present in the response. Their placeholder `<histogram>`
-is explained in detail in its own section below.
+* `<sample_value>` placeholders
+  * numeric
+    * if == `NaN`, `Inf` OR `-Inf` -> quoted JSON strings ("NaN", "Inf" OR "-Inf")
+      * Reason: 🧠JSON does NOT support special float values🧠
 
 ### Range vectors
 
@@ -648,18 +591,21 @@ String results are returned as result type `string`. The corresponding
 
 ### Native histograms
 
-The `<histogram>` placeholder used above is formatted as follows.
+* requirements
+  * enable [native histograms](../feature_flags.md#native-histograms)
 
-_Note that native histograms are an experimental feature, and the format below
-might still change._
+* == API's response's `data.result[*].histogram`
 
-```json
-{
-  "count": "<count_of_observations>",
-  "sum": "<sum_of_observations>",
-  "buckets": [ [ <boundary_rule>, "<left_boundary>", "<right_boundary>", "<count_in_bucket>" ], ... ]
-}
-```
+* `<histogram>` placeholder
+  * syntax
+
+    ```json
+    {
+      "count": "<count_of_observations>",
+      "sum": "<sum_of_observations>",
+      "buckets": [ [ <boundary_rule>, "<left_boundary>", "<right_boundary>", "<count_in_bucket>" ], ... ]
+    }
+    ```
 
 The `<boundary_rule>` placeholder is an integer between 0 and 3 with the
 following meaning:

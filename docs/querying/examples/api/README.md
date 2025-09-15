@@ -5,8 +5,10 @@
     * NOT exist page
       * Reason:🧠ONLY the Prometheus server's host🧠
 
-# Format overview
 * hit [sample.http](sample.http)
+
+# Format overview
+* hit [sampleFormatOverview.http](sampleFormatOverview.http)
 
 # Expression queries
 * hit [sampleExpressionQueries.http](sampleExpressionQueries.http)
@@ -17,3 +19,12 @@
 * `?query=<string>` /
   * `<string>` == PromQL expression
 ## Range queries
+* evaluated | range of time
+  * check API's URL parameters `start` & `end`
+
+# TODO:
+
+# Expression query result formats
+* hit [sampleExpressionQueryFormats.http](sampleExpressionQueryFormats.http)
+
+# TODO:
