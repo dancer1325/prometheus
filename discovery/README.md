@@ -1,41 +1,38 @@
 # Service Discovery
 
-This directory contains the service discovery (SD) component of Prometheus.
+* goal
+  * Prometheus's service discovery (SD) component 
 
 ## Design of a Prometheus SD
 
-There are many requests to add new SDs to Prometheus, this section looks at
-what makes a good SD and covers some of the common implementation issues.
+* goal
+  * what makes a good SD
+  * common SD implementation issues
 
 ### Does this make sense as an SD?
 
-The first question to be asked is does it make sense to add this particular
-SD? An SD mechanism should be reasonably well established, and at a minimum in
-use across multiple organizations. It should allow discovering of machines
-and/or services running somewhere. When exactly an SD is popular enough to
-justify being added to Prometheus natively is an open question.
+* SD mechanism
+  * requirements
+    * well established
+    * used | MULTIPLE organizations
+    * should allow discovering of machines &/OR services / run | SOMEWHERE
+    * 's implementation
+      * MUST have a committed maintainer / push access
+    * NOT valid
+      * brand of EXISTING SD mechanism
+      * application / discover SAME software
+        * _Example:_ Kafka or Cassandra server / find OTHER Kafka or Cassandra serverS
+  * 's design
+    * generic / admit MULTIPLE variations
 
-Note: As part of lifting the past moratorium on new SD implementations it was
-agreed that, in addition to the existing requirements, new service discovery 
-implementations will be required to have a committed maintainer with push access (i.e., on -team).
-
-It should not be a brand new SD mechanism, or a variant of an established
-mechanism. We want to integrate Prometheus with the SD that's already there in
-your infrastructure, not invent yet more ways to do service discovery. We also
-do not add mechanisms to work around users lacking service discovery and/or
-configuration management infrastructure.
-
-SDs that merely discover other applications running the same software (e.g.
-talk to one Kafka or Cassandra server to find the others) are not service
-discovery. In that case the SD you should be looking at is whatever decides
-that a machine is going to be a Kafka server, likely a machine database or
-configuration management system.
-
-If something is particularly custom or unusual, `file_sd` is the generic
-mechanism provided for users to hook in. Generally with Prometheus we offer a
-single generic mechanism for things with infinite variations, rather than
-trying to support everything natively (see also, alertmanager webhook, remote
-read, remote write, node exporter textfile collector). For example anything
+* `file_sd`
+  * == SD mechanism 
+  * use cases
+    * custom OR unusual
+ 
+    rather than trying to support everything natively (see also, alertmanager webhook, remote
+read, remote write, node exporter textfile collector)
+* For example anything
 that would involve talking to a relational database should use `file_sd`
 instead.
 
@@ -53,14 +50,18 @@ using
 [relabelling](https://prometheus.io/docs/operating/configuration/#<relabel_config>).
 This information is generally termed metadata.
 
-Metadata is exposed as a set of key/value pairs (labels) per target. The keys
+Metadata is exposed as a set of key/value pairs (labels) per target
+* The keys
 are prefixed with `__meta_<sdname>_<key>`, and there should also be an `__address__`
 label with the host:port of the target (preferably an IP address to avoid DNS
-lookups). No other labelnames should be exposed.
+lookups)
+* No other labelnames should be exposed.
 
 It is very common for initial pull requests for new SDs to include hardcoded
-assumptions that make sense for the author's setup. SD should be generic,
-any customisation should be handled via relabelling. There should be basically
+assumptions that make sense for the author's setup
+* SD should be generic,
+any customisation should be handled via relabelling
+* There should be basically
 no business logic, filtering, or transformations of the data from the SD beyond
 that which is needed to fit it into the metadata data model. 
 
