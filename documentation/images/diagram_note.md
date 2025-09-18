@@ -1,7 +1,9 @@
-The architecture image was drawn on https://app.diagrams.net/. The native draw.io
-source file is called `architecture.xml`, while `architecture.svg` is its SVG
-export.
+* goal
+  * [architecture.svg](architecture.svg) & [architecture.xml](architecture.xml)
 
-To change the architecture diagram, go to https://app.diagrams.net/ and import the
-XML source file. After making changes to the diagram, export the result as SVG.
-Update both the source file and the SVG export in this directory.
+* architecture image
+  * drawn | https://app.diagrams.net/ /
+    * architecture.xml
+      * == native draw.io
+    * architecture.svg
+      * == architecture.xml / exported -- to -- SVG

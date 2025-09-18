@@ -29,13 +29,9 @@
   * == SD mechanism 
   * use cases
     * custom OR unusual
- 
-    rather than trying to support everything natively (see also, alertmanager webhook, remote
-read, remote write, node exporter textfile collector)
-* For example anything
-that would involve talking to a relational database should use `file_sd`
-instead.
+    * talk to a relational database
 
+* TODO: 
 For configuration management systems like Chef, while they do have a
 database/API that'd in principle make sense to talk to for service discovery,
 the idiomatic approach is to use Chef's templating facilities to write out a
