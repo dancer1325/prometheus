@@ -1,0 +1,139 @@
+# Federation Master Recording and Alerting Rules
+# Global rules that operate on federated data from all sources
+
+groups:
+  - name: global_recording_rules
+    interval: 30s
+    rules:
+      # Global service availability
+      - record: global:service_availability
+        expr: avg(up) by (job)
+
+      # Global request rate across all web services
+      - record: global:http_requests_rate
+        expr: sum(rate(http_requests_total[5m])) by (job, method, status)
+
+      # Global error rate across all services
+      - record: global:error_rate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) /
+          sum(rate(http_requests_total[5m])) by (job)
+
+      # Global database connection utilization
+      - record: global:db_connection_utilization
+        expr: |
+          sum(mysql_global_status_threads_connected) by (instance) /
+          sum(mysql_global_variables_max_connections) by (instance)
+
+      # Global infrastructure CPU usage
+      - record: global:cpu_utilization
+        expr: |
+          100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+      # Global memory utilization
+      - record: global:memory_utilization
+        expr: |
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+  - name: global_alerts
+    rules:
+      # Global service down alert
+      - alert: GlobalServiceDown
+        expr: global:service_availability < 0.8
+        for: 2m
+        labels:
+          severity: critical
+          scope: global
+        annotations:
+          summary: "Global service {{ $labels.job }} availability is low"
+          description: "Service {{ $labels.job }} availability is {{ $value | humanizePercentage }}"
+
+      # Global high error rate
+      - alert: GlobalHighErrorRate
+        expr: global:error_rate > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          scope: global
+        annotations:
+          summary: "High error rate detected globally for {{ $labels.job }}"
+          description: "Error rate for {{ $labels.job }} is {{ $value | humanizePercentage }}"
+
+      # Global database connection issues
+      - alert: GlobalDatabaseConnectionHigh
+        expr: global:db_connection_utilization > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          scope: global
+          component: database
+        annotations:
+          summary: "Database connection utilization high on {{ $labels.instance }}"
+          description: "Connection utilization is {{ $value | humanizePercentage }}"
+
+      # Global infrastructure CPU high
+      - alert: GlobalHighCPUUsage
+        expr: global:cpu_utilization > 85
+        for: 5m
+        labels:
+          severity: warning
+          scope: global
+          component: infrastructure
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}"
+
+      # Global infrastructure memory high
+      - alert: GlobalHighMemoryUsage
+        expr: global:memory_utilization > 90
+        for: 3m
+        labels:
+          severity: critical
+          scope: global
+          component: infrastructure
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}"
+
+      # Federation health check
+      - alert: FederationSourceDown
+        expr: up{job=~"federate-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          scope: federation
+        annotations:
+          summary: "Federation source {{ $labels.job }} is down"
+          description: "Cannot federate data from {{ $labels.instance }}"
+
+  - name: cross_service_correlation
+    rules:
+      # Correlate web performance with database performance
+      - alert: WebSlowWithDatabaseIssues
+        expr: |
+          (global:http_requests_rate{job=~"web-.*"} > 100) and
+          (global:db_connection_utilization > 0.7)
+        for: 3m
+        labels:
+          severity: warning
+          scope: correlation
+        annotations:
+          summary: "Web performance issues correlated with database load"
+          description: |
+            High web traffic ({{ with query "global:http_requests_rate{job=~\"web-.*\"}" }}{{ . | first | value | printf "%.1f" }}{{ end }} req/s) 
+            with high DB connection usage ({{ with query "global:db_connection_utilization" }}{{ . | first | value | humanizePercentage }}{{ end }})
+
+      # Correlate application errors with infrastructure issues
+      - alert: ErrorsWithInfrastructureIssues
+        expr: |
+          (global:error_rate > 0.02) and
+          (global:cpu_utilization > 80 or global:memory_utilization > 85)
+        for: 2m
+        labels:
+          severity: warning
+          scope: correlation
+        annotations:
+          summary: "Application errors correlated with infrastructure stress"
+          description: |
+            Error rate: {{ with query "global:error_rate" }}{{ . | first | value | humanizePercentage }}{{ end }}
+            Infrastructure stress detected on multiple nodes

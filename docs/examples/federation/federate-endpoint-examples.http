@@ -1,0 +1,93 @@
+### 0. WITHOUT specifying `match`
+GET http://localhost:9090/federate
+
+### 1. Basic federate - Single match parameter
+### Get all metrics for job="prometheus"
+GET http://localhost:9090/federate?match[]={job="prometheus"}
+
+### 2. Multiple match parameters (UNION of all matches)
+### Get Prometheus health + all job-level aggregated metrics
+GET http://localhost:9090/federate?match[]={job="prometheus"}&match[]={__name__=~"job:.*"}
+
+### 3. Specific metric name
+### Get only the "up" metric for all targets
+GET http://localhost:9090/federate?match[]=up
+
+### 4. Regex pattern matching
+### Get all HTTP request metrics
+GET http://localhost:9090/federate?match[]={__name__=~"http_requests.*"}
+
+### 5. Label-based filtering
+### Get all metrics for web services
+GET http://localhost:9090/federate?match[]={job=~"web-.*"}
+
+### 6. Multiple specific metrics
+### Get CPU and memory metrics
+GET http://localhost:9090/federate?match[]=node_cpu_seconds_total&match[]=node_memory_MemAvailable_bytes
+
+### 7. Complex label matching
+### Get database metrics for specific instances
+GET http://localhost:9090/federate?match[]={job="mysql",instance=~"db-.*"}
+
+### 8. Instance-specific federation
+### Get all metrics from specific instance
+GET http://localhost:9090/federate?match[]={instance="web-server-1:8080"}
+
+### 9. Error - No match parameter (will fail)
+### This will return an error because match[] is required
+GET http://localhost:9090/federate
+
+### 10. Real federation example - Payment service federating DB metrics
+### This is what a payment service would use to get relevant DB metrics
+GET http://database-prometheus:9090/federate?match[]={job="payment-database"}&match[]=mysql_global_status_threads_connected&match[]=mysql_global_status_slow_queries
+
+### 11. Cross-service federation example
+### Web service getting infrastructure metrics for its nodes
+GET http://infrastructure-prometheus:9090/federate?match[]=node_cpu_seconds_total{instance=~"web-node-.*"}&match[]=node_memory_MemAvailable_bytes{instance=~"web-node-.*"}
+
+### 12. Hierarchical federation example
+### Global Prometheus federating from regional Prometheus
+GET http://regional-prometheus-us:9090/federate?match[]={job="prometheus"}&match[]={__name__=~"job:.*"}&match[]={__name__=~".*:rate5m"}
+
+### Response Format Examples:
+
+### Example Response for: GET /federate?match[]=up
+# HELP up The scraping was successful
+# TYPE up gauge
+up{job="prometheus",instance="localhost:9090"} 1 1642678800000
+up{job="node",instance="node1:9100"} 1 1642678800000
+up{job="node",instance="node2:9100"} 0 1642678800000
+up{job="mysql",instance="mysql:3306"} 1 1642678800000
+
+### Example Response for: GET /federate?match[]={job="prometheus"}
+# HELP prometheus_build_info A metric with a constant '1' value labeled by version, revision, branch, and goversion from which prometheus was built.
+# TYPE prometheus_build_info gauge
+prometheus_build_info{branch="HEAD",goversion="go1.17.6",instance="localhost:9090",job="prometheus",revision="659ce8c",version="2.32.1"} 1 1642678800000
+# HELP prometheus_config_last_reload_successful Whether the last configuration reload attempt was successful.
+# TYPE prometheus_config_last_reload_successful gauge
+prometheus_config_last_reload_successful{instance="localhost:9090",job="prometheus"} 1 1642678800000
+# HELP up The scraping was successful
+# TYPE up gauge
+up{instance="localhost:9090",job="prometheus"} 1 1642678800000
+
+### URL Encoding Examples:
+### When using curl or programmatic access, special characters need URL encoding
+
+### Original: {job="web-app"}
+### URL Encoded: %7Bjob%3D%22web-app%22%7D
+GET http://localhost:9090/federate?match[]=%7Bjob%3D%22web-app%22%7D
+
+### Original: {__name__=~"job:.*"}
+### URL Encoded: %7B__name__%3D~%22job%3A.*%22%7D
+GET http://localhost:9090/federate?match[]=%7B__name__%3D~%22job%3A.*%22%7D
+
+### Curl Examples:
+
+### Simple curl command
+# curl 'http://localhost:9090/federate?match[]={job="prometheus"}'
+
+### Multiple match parameters with curl
+# curl 'http://localhost:9090/federate?match[]={job="prometheus"}&match[]={__name__=~"job:.*"}'
+
+### Curl with proper URL encoding
+# curl 'http://localhost:9090/federate?match[]=%7Bjob%3D%22prometheus%22%7D'

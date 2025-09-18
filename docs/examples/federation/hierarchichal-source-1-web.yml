@@ -1,0 +1,56 @@
+# Source Prometheus 1 Configuration (Web Services)
+# Monitors web applications and creates recording rules for federation
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Recording rules to create job-level aggregates for federation
+rule_files:
+  - "web_recording_rules.yml"
+
+# Local alerting for web services
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Web Application 1
+  - job_name: 'web-app1'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'app1:8080'
+    metrics_path: '/metrics'
+
+  # Web Application 2
+  - job_name: 'web-app2'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'app2:8080'
+    metrics_path: '/metrics'
+
+  # Nginx Load Balancer
+  - job_name: 'web-nginx'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'nginx:9113'
+    metrics_path: '/metrics'
+
+  # HAProxy (if used)
+  - job_name: 'web-haproxy'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'haproxy:8404'
+    metrics_path: '/metrics'
+
+  # Monitor this Prometheus instance
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'

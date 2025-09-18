@@ -1,0 +1,95 @@
+# Service B Prometheus Configuration (Payment Team)
+# This Prometheus monitors payment services AND federates database metrics from Service A
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Rules for alerting (combining payment + database metrics)
+rule_files:
+  - "payment_alerts.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # 1. Scrape own payment service metrics
+  - job_name: 'payment-api'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'payment-api-1:8080'
+          - 'payment-api-2:8080'
+          - 'payment-api-3:8080'
+    metrics_path: '/metrics'
+
+  # 2. Scrape payment workers
+  - job_name: 'payment-workers'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'payment-worker-1:8081'
+          - 'payment-worker-2:8081'
+    metrics_path: '/metrics'
+
+  # 3. FEDERATION: Scrape selected database metrics from Service A Prometheus
+  - job_name: 'federate-database'
+    scrape_interval: 30s
+    honor_labels: true
+    metrics_path: '/federate'
+    
+    params:
+      'match[]':
+        # Database connection metrics
+        - 'mysql_global_status_threads_connected'
+        - 'mysql_global_status_max_used_connections'
+        
+        # Database performance metrics
+        - 'mysql_global_status_slow_queries'
+        - 'mysql_global_status_queries'
+        - 'mysql_global_status_innodb_rows_read'
+        
+        # Database resource usage
+        - 'mysql_global_status_innodb_buffer_pool_pages_data'
+        - 'mysql_global_variables_innodb_buffer_pool_size'
+        
+        # Specific job for payment database
+        - '{job="payment-database"}'
+        - '{instance=~"payment-db-.*"}'
+        
+        # Redis metrics (if payment service uses Redis)
+        - 'redis_connected_clients{job="payment-cache"}'
+        - 'redis_memory_used_bytes{job="payment-cache"}'
+
+    static_configs:
+      - targets:
+          - 'database-prometheus:9090'  # Service A Prometheus
+
+  # 4. Scrape Prometheus itself for monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
+
+# Recording rules for payment + database correlations
+recording_rules:
+  - name: payment_database_correlations
+    rules:
+      # Payment error rate
+      - record: payment:error_rate
+        expr: rate(payment_errors_total[5m])
+      
+      # Database connection utilization
+      - record: database:connection_utilization
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections
+      
+      # Payment latency with DB context
+      - record: payment:latency_p95_with_db_load
+        expr: |
+          histogram_quantile(0.95, rate(payment_duration_seconds_bucket[5m]))
+          * on() group_left()
+          (mysql_global_status_slow_queries > 0)

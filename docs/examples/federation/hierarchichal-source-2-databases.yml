@@ -1,0 +1,72 @@
+# Source Prometheus 2 Configuration (Databases)
+# Monitors database infrastructure and creates recording rules for federation
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Recording rules to create job-level aggregates for federation
+rule_files:
+  - "database_recording_rules.yml"
+
+# Local alerting for database services
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # MySQL Database
+  - job_name: 'mysql-db'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'mysql:3306'
+    metrics_path: '/metrics'
+
+  # MySQL Exporter
+  - job_name: 'mysql-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'mysqld-exporter:9104'
+    metrics_path: '/metrics'
+
+  # Redis Cache
+  - job_name: 'redis-cache'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'redis:6379'
+    metrics_path: '/metrics'
+
+  # Redis Exporter
+  - job_name: 'redis-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'redis-exporter:9121'
+    metrics_path: '/metrics'
+
+  # PostgreSQL Database
+  - job_name: 'postgres-db'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'postgres:5432'
+    metrics_path: '/metrics'
+
+  # PostgreSQL Exporter
+  - job_name: 'postgres-exporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'postgres-exporter:9187'
+    metrics_path: '/metrics'
+
+  # Monitor this Prometheus instance
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'

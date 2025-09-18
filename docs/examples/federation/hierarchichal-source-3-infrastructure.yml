@@ -1,0 +1,74 @@
+# Source Prometheus 3 Configuration (Infrastructure)
+# Monitors infrastructure components and creates recording rules for federation
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Recording rules to create job-level aggregates for federation
+rule_files:
+  - "infrastructure_recording_rules.yml"
+
+# Local alerting for infrastructure
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Node Exporter (System Metrics)
+  - job_name: 'node'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'node1:9100'
+          - 'node2:9100'
+          - 'node3:9100'
+    metrics_path: '/metrics'
+
+  # Docker Engine Metrics
+  - job_name: 'docker'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'docker-host1:9323'
+          - 'docker-host2:9323'
+    metrics_path: '/metrics'
+
+  # cAdvisor (Container Metrics)
+  - job_name: 'cadvisor'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - 'cadvisor1:8080'
+          - 'cadvisor2:8080'
+    metrics_path: '/metrics'
+
+  # Kubernetes API Server (if applicable)
+  - job_name: 'kubernetes-apiserver'
+    scrape_interval: 30s
+    kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+            - default
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+
+  # Kubernetes Nodes (if applicable)
+  - job_name: 'kubernetes-nodes'
+    scrape_interval: 15s
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+
+  # Monitor this Prometheus instance
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+          - 'localhost:9090'

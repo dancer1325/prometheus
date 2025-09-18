@@ -1,0 +1,104 @@
+# Payment Service Alert Rules (combining payment + federated database metrics)
+
+groups:
+  - name: payment_service_alerts
+    rules:
+      # Payment-specific alerts
+      - alert: HighPaymentErrorRate
+        expr: rate(payment_errors_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          service: payment
+        annotations:
+          summary: "High payment error rate detected"
+          description: "Payment error rate is {{ $value }} errors/sec for the last 5 minutes"
+
+      - alert: SlowPaymentProcessing
+        expr: histogram_quantile(0.95, rate(payment_duration_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: payment
+        annotations:
+          summary: "Payment processing is slow"
+          description: "95th percentile payment duration is {{ $value }} seconds"
+
+  - name: payment_database_correlation_alerts
+    rules:
+      # Alerts combining payment metrics with federated database metrics
+      - alert: PaymentErrorsWithDatabaseIssues
+        expr: |
+          (rate(payment_errors_total[5m]) > 0.02) 
+          and 
+          (mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8)
+        for: 2m
+        labels:
+          severity: critical
+          service: payment
+          component: database
+        annotations:
+          summary: "Payment errors correlated with database connection issues"
+          description: |
+            Payment error rate: {{ with query "rate(payment_errors_total[5m])" }}{{ . | first | value | printf "%.3f" }}{{ end }} errors/sec
+            Database connection usage: {{ with query "mysql_global_status_threads_connected / mysql_global_variables_max_connections * 100" }}{{ . | first | value | printf "%.1f" }}{{ end }}%
+
+      - alert: SlowPaymentsWithSlowQueries
+        expr: |
+          (histogram_quantile(0.95, rate(payment_duration_seconds_bucket[5m])) > 3)
+          and
+          (rate(mysql_global_status_slow_queries[5m]) > 2)
+        for: 3m
+        labels:
+          severity: warning
+          service: payment
+          component: database
+        annotations:
+          summary: "Slow payments correlated with database slow queries"
+          description: |
+            Payment 95th percentile latency: {{ with query "histogram_quantile(0.95, rate(payment_duration_seconds_bucket[5m]))" }}{{ . | first | value | printf "%.2f" }}{{ end }}s
+            Database slow queries rate: {{ with query "rate(mysql_global_status_slow_queries[5m])" }}{{ . | first | value | printf "%.2f" }}{{ end }} queries/sec
+
+      - alert: PaymentCacheIssues
+        expr: |
+          (rate(payment_cache_misses_total[5m]) > 10)
+          and
+          (redis_connected_clients{job="payment-cache"} > 100)
+        for: 2m
+        labels:
+          severity: warning
+          service: payment
+          component: cache
+        annotations:
+          summary: "Payment cache performance issues"
+          description: |
+            Cache miss rate: {{ with query "rate(payment_cache_misses_total[5m])" }}{{ . | first | value | printf "%.1f" }}{{ end }} misses/sec
+            Redis connections: {{ with query "redis_connected_clients{job=\"payment-cache\"}" }}{{ . | first | value }}{{ end }}
+
+  - name: payment_infrastructure_alerts
+    rules:
+      # Database resource alerts (from federated metrics)
+      - alert: PaymentDatabaseHighConnections
+        expr: mysql_global_status_threads_connected{job="payment-database"} / mysql_global_variables_max_connections{job="payment-database"} > 0.85
+        for: 2m
+        labels:
+          severity: warning
+          service: payment
+          component: database
+        annotations:
+          summary: "Payment database connection pool nearly exhausted"
+          description: "Database connection usage is {{ $value | humanizePercentage }} of maximum"
+
+      - alert: PaymentDatabaseBufferPoolLow
+        expr: |
+          (mysql_global_status_innodb_buffer_pool_pages_data{job="payment-database"} * 16384) 
+          / 
+          mysql_global_variables_innodb_buffer_pool_size{job="payment-database"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: payment
+          component: database
+        annotations:
+          summary: "Payment database buffer pool usage high"
+          description: "InnoDB buffer pool usage is {{ $value | humanizePercentage }}"

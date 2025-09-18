@@ -1,0 +1,120 @@
+# Federation Master Prometheus Configuration
+# This is the main aggregator that federates from 3 source Prometheus servers
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Rules for global alerting and recording rules
+rule_files:
+  - "federation_rules.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Federation from Source Prometheus 1 (Web Services)
+  - job_name: 'federate-web-services'
+    scrape_interval: 15s
+    honor_labels: true
+    metrics_path: '/federate'
+    
+    params:
+      'match[]':
+        # Prometheus health metrics
+        - '{job="prometheus"}'
+        
+        # Aggregated job-level metrics (recording rules from source)
+        - '{__name__=~"job:.*"}'
+        
+        # Web service specific metrics
+        - 'up{job=~"web-.*"}'
+        - 'http_requests_total'
+        - 'http_request_duration_seconds'
+        - 'nginx_connections_active'
+        
+        # High-level application metrics
+        - '{__name__=~".*_total"}'
+        - '{__name__=~".*_duration_.*"}'
+
+    static_configs:
+      - targets:
+          - 'source-prometheus-1:9090'
+
+  # Federation from Source Prometheus 2 (Databases)
+  - job_name: 'federate-databases'
+    scrape_interval: 15s
+    honor_labels: true
+    metrics_path: '/federate'
+    
+    params:
+      'match[]':
+        # Prometheus health metrics
+        - '{job="prometheus"}'
+        
+        # Aggregated job-level metrics
+        - '{__name__=~"job:.*"}'
+        
+        # Database metrics
+        - 'up{job=~".*db.*"}'
+        - 'mysql_up'
+        - 'mysql_global_status_threads_connected'
+        - 'mysql_global_status_slow_queries'
+        - 'redis_up'
+        - 'redis_connected_clients'
+        - 'postgres_up'
+        
+        # Database performance aggregates
+        - '{__name__=~".*_connections.*"}'
+        - '{__name__=~".*_queries.*"}'
+
+    static_configs:
+      - targets:
+          - 'source-prometheus-2:9090'
+
+  # Federation from Source Prometheus 3 (Infrastructure)
+  - job_name: 'federate-infrastructure'
+    scrape_interval: 15s
+    honor_labels: true
+    metrics_path: '/federate'
+    
+    params:
+      'match[]':
+        # Prometheus health metrics
+        - '{job="prometheus"}'
+        
+        # Aggregated job-level metrics
+        - '{__name__=~"job:.*"}'
+        
+        # Node exporter metrics (aggregated)
+        - 'up{job="node"}'
+        - 'node_load1'
+        - 'node_load5'
+        - 'node_load15'
+        - 'node_memory_MemAvailable_bytes'
+        - 'node_filesystem_avail_bytes'
+        - 'node_cpu_seconds_total'
+        
+        # Docker metrics
+        - 'up{job="docker"}'
+        - 'container_cpu_usage_seconds_total'
+        - 'container_memory_usage_bytes'
+        
+        # Infrastructure aggregates
+        - '{__name__=~".*_cpu_.*"}'
+        - '{__name__=~".*_memory_.*"}'
+        - '{__name__=~".*_disk_.*"}'
+
+    static_configs:
+      - targets:
+          - 'source-prometheus-3:9090'
+
+  # Monitor the federation server itself
+  - job_name: 'prometheus-federation'
+    static_configs:
+      - targets:
+          - 'localhost:9090'
