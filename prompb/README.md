@@ -1,9 +1,14 @@
-The compiled protobufs are version controlled and you won't normally need to
-re-compile them when building Prometheus.
-
-If however you have modified the defs and do need to re-compile, run
-`make proto` from the parent dir.
-
-In order for the [script](../scripts/genproto.sh) to run, you'll need `protoc` (version 3.15.8) in
-your PATH.
-
+* protobufs
+  * ALREADY, are 
+    * compiled
+    * versioned
+    * controlled
+  * | build Prometheus,
+    * ❌NOT NORMALLY need to re-compile them❌
+    * if you have modified the defs -> need to re-compile
+      * steps
+        * | root path
+          * install [protoc v3.15.8>](https://protobuf.dev/installation/)
+            * 
+          * uncomment [Makefile.common](/prometheus/Makefile.common)
+          * `make common-proto`
