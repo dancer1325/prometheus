@@ -2,8 +2,7 @@
 title: prometheus
 ---
 
-The Prometheus monitoring server
-
+* == Prometheus monitoring server
 
 ## Flags
 

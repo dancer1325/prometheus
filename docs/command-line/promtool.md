@@ -2,8 +2,7 @@
 title: promtool
 ---
 
-Tooling for the Prometheus monitoring system.
-
+* == Prometheus monitoring system tools
 
 ## Flags
 
@@ -13,9 +12,6 @@ Tooling for the Prometheus monitoring system.
 | <code class="text-nowrap">--version</code> | Show application version. |
 | <code class="text-nowrap">--experimental</code> | Enable experimental commands. |
 | <code class="text-nowrap">--enable-feature</code> <code class="text-nowrap">...<code class="text-nowrap"> | Comma separated feature names to enable. Valid options: promql-experimental-functions, promql-delayed-name-removal. See https://prometheus.io/docs/prometheus/latest/feature_flags/ for more details |
-
-
-
 
 ## Commands
 
@@ -30,9 +26,6 @@ Tooling for the Prometheus monitoring system.
 | tsdb | Run tsdb commands. |
 | promql | PromQL formatting and editing. Requires the --experimental flag. |
 
-
-
-
 ### `promtool help`
 
 Show help.
@@ -45,14 +38,9 @@ Show help.
 | --- | --- |
 | command | Show help on command. |
 
-
-
-
 ### `promtool check`
 
 Check the resources for validity.
-
-
 
 #### Flags
 
@@ -200,13 +188,9 @@ $ cat metrics.prom | promtool check metrics
 
 $ curl -s http://localhost:9090/metrics | promtool check metrics
 
-
-
 ### `promtool query`
 
 Run query against a Prometheus server.
-
-
 
 #### Flags
 
@@ -340,14 +324,9 @@ Run queries against your Prometheus to analyze the usage pattern of certain metr
 | <code class="text-nowrap">--time</code> | Query time (RFC3339 or Unix timestamp), defaults to now. |  |
 | <code class="text-nowrap">--match</code> <code class="text-nowrap">...<code class="text-nowrap"> | Series selector. Can be specified multiple times. |  |
 
-
-
-
 ### `promtool debug`
 
 Fetch debug information.
-
-
 
 ##### `promtool debug pprof`
 
