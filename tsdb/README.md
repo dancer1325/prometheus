@@ -14,10 +14,9 @@
 
 * [ORIGINAL design](docs/originalDesign.md)
 * Video: [Storing 16 Bytes at Scale](https://youtu.be/b_pEevMAC3I) from [PromCon 2017](https://promcon.io/2017-munich/).
-* Compression is based on the Gorilla TSDB [white paper](http://www.vldb.org/pvldb/vol8/p1816-teller.pdf).
+* Compression 
+  * -- based on the -- [Gorilla TSDB white paper](http://www.vldb.org/pvldb/vol8/p1816-teller.pdf)
 
-
-A series of blog posts explaining different components of TSDB:
 * [The Head Block](https://ganeshvernekar.com/blog/prometheus-tsdb-the-head-block/)
 * [WAL and Checkpoint](https://ganeshvernekar.com/blog/prometheus-tsdb-wal-and-checkpoint/)
 * [Memory Mapping of Head Chunks from Disk](https://ganeshvernekar.com/blog/prometheus-tsdb-mmapping-head-chunks-from-disk/)

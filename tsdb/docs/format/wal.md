@@ -1,6 +1,7 @@
 # WAL Disk Format
 
-This document describes the official Prometheus WAL format.
+* goal
+  * official Prometheus WAL format
 
 The write ahead log operates in segments that are numbered and sequential,
 and are limited to 128MB by default.
