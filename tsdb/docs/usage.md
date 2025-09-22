@@ -1,16 +1,28 @@
 # Usage
 
-TSDB can be - and is - used by other applications such as [Cortex](https://cortexmetrics.io/), [Thanos](https://thanos.io/), and [Grafana Mimir](https://grafana.com/oss/mimir/).
-This directory contains documentation for any developers who wish to work on or with TSDB.
+* TSDB
+  * used by
+    * OTHER applications
+      * [Cortex](https://cortexmetrics.io/)
+      * [Thanos](https://thanos.io/)
+      * [Grafana Mimir](https://grafana.com/oss/mimir/)
 
-For a full example of instantiating a database, adding and querying data, see the [tsdb example in the docs](https://pkg.go.dev/github.com/prometheus/prometheus/tsdb).
-`tsdb/db_test.go` also demonstrates various specific usages of the TSDB library.
+* _Examples:_
+  * [example_test.go](../example_test.go)
+  * [db_test.go](../db_test.go)
 
 ## Instantiating a database
 
-Callers should use [`tsdb.Open`](https://pkg.go.dev/github.com/prometheus/prometheus/tsdb#Open) to open a TSDB
-(the directory may be new or pre-existing).
-This returns a [`*tsdb.DB`](https://pkg.go.dev/github.com/prometheus/prometheus/tsdb#DB) which is the actual database.
+* [`func Open(dir string, l *slog.Logger, r prometheus.Registerer, opts *Options, stats *DBStats) (db *DB, err error) {}`](https://pkg.go.dev/github.com/prometheus/prometheus/tsdb#Open) 
+  * open a TSDB
+  * 's input
+    * `dir string`
+      * ALLOWED ones
+        * NEW OR
+        * pre-existing
+  * 's return
+    * [`*tsdb.DB`](https://pkg.go.dev/github.com/prometheus/prometheus/tsdb#DB)
+      * == actual database
 
 A `DB` has the following main components:
 
@@ -65,7 +77,3 @@ Remember:
 * A querier should be closed when you're done with it.
 * Use mint/maxt to avoid loading unneeded data.
 
-
-## Example code
-
-Find the example code for ingesting samples and querying them in [`tsdb/example_test.go`](../example_test.go)

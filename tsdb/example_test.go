@@ -24,6 +24,9 @@ import (
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 )
 
+// goal
+// 1. instantiate a database
+// 2. add query data
 func Example() {
 	// Create a random dir to work in.  Open() doesn't require a pre-existing dir, but
 	// we want to make sure not to make a mess where we shouldn't.

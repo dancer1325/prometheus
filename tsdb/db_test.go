@@ -67,6 +67,8 @@ import (
 	"github.com/prometheus/prometheus/util/testutil"
 )
 
+// goal
+// 1. uses of TSDB library
 func TestMain(m *testing.M) {
 	var isolationEnabled bool
 	flag.BoolVar(&isolationEnabled, "test.tsdb-isolation", true, "enable isolation")
