@@ -1,0 +1,24 @@
+groups:
+  - name: performance-test
+    interval: 30s
+    rules:
+      # Recording rule: Pre-compute expensive
+      - record: handler:http_latency_ratio:5m
+        expr: |
+          histogram_quantile(0.95, sum(rate(prometheus_http_request_duration_seconds_bucket[5m])) by (le, handler)) / 
+          avg(rate(prometheus_http_requests_total[5m])) by (handler)
+        labels:
+          metric_type: precomputed
+
+
+      # Recording rule: Complex aggregation
+      - record: job:http_request_rate:5m
+        expr: |
+          sum by (job) (
+            rate(prometheus_http_requests_total[5m])
+          ) / 
+          count by (job) (
+            up{job=~"prometheus|node"}
+          )
+        labels:
+          aggregation: rate_per_instance

@@ -54,5 +54,35 @@
       * print the error
 
 # recording rules
+## precompute
+* steps
+  * | root path,
+    * `prometheus --config.file=docs/configuration/examples/recordingrules/prometheus-recordingrule.yml --web.listen-address=:9090`
+      * Problems:
+        * Problem1: NOT found alert rules
+          * Attempt1: `- "docs/configuration/examples/recordingrules/test-recording-rules.yml"`
+          * Attempt2: 
+            * | this path,
+              * `prometheus --config.file=prometheus-recordingrule.yml --web.listen-address=:9090`
+            * | [ui](/prometheus/web/ui)
+              * `npm run start` 
+          * Note: SOMETHING MUST be wrongly defined | recording rule
+            * Reason: 🧠if you pass "simple_rulefile.yaml" is displayed 🧠
+            * `promtool check rules test-recording-rules.yaml` SUCCESS
+          * Solution: I was checking in alerts, not in rules -- http://localhost:9090/rules -- 
+  * | this path,
+    * `./test-performance.sh`
+      * Problems:
+        * Problem1: "data.result" is empty
+          * Solution: use Prometheus' metrics, NOT NodeExporter's metrics
+        * Problem2: "... jq '.data.result[0].metric'" returns null
+          * Solution: `kill -SIGHUP PREVIOUS_PID_GOT`
+        * Problem3: ALMOST SAME timing results
+          * Solution: switch to MOST complex queries
+
+## restrictions
+* TODO:
+
+# alerting rules
 
 * TODO:

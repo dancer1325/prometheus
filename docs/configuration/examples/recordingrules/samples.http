@@ -1,0 +1,9 @@
+### GET rules loaded
+GET {{PROMETHEUS_URL}}/api/v1/rules
+
+### Consulta compleja de CPU sin recording rule
+POST {{PROMETHEUS_URL}}/api/v1/query
+Content-Type: application/x-www-form-urlencoded
+
+query=sum(rate(prometheus_http_requests_total[5m])) by (handler)
+

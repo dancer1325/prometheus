@@ -3,11 +3,18 @@ title: Template reference
 sort_rank: 5
 ---
 
-Prometheus supports templating in the annotations and labels of alerts,
-as well as in served console pages. Templates have the ability to run
-queries against the local database, iterate over data, use conditionals,
-format data, etc. The Prometheus templating language is based on the [Go
-templating](https://golang.org/pkg/text/template/) system.
+* Prometheus templating language
+  * -- based on -- [Go templating](https://golang.org/pkg/text/template/) system
+  * allowed |
+    * annotations
+    * labels of alerts,
+    * served console pages
+  * allows
+    * run queries -- against the -- local database
+    * iterate -- over -- data
+    * use conditionals
+    * format data
+    * etc
 
 ## Data Structures
 

@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 20s    # evaluate the rules EACH 30"
+
+rule_files:
+  - "test-recording-rules.yaml"
+  # - "simple_rulefile.yaml"
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

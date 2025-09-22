@@ -1,7 +1,17 @@
 groups:
   - name: example
     rules:
+      # 1. recording rule
       - record: code:prometheus_http_requests_total:sum
         expr: sum by (code) (prometheus_http_requests_total)
   - name: frequent-checks
     interval: 15s
+    rules:
+      # 2. alerting rule
+      - alert: InstanceDown
+        expr: up == 0
+        for: 0m
+        labels:
+          severity: page
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
