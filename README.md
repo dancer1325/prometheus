@@ -6,6 +6,7 @@
 * == Systems & service monitoring system /
   * responsible for
     * collecting metrics | intervals
+      * -- by scraping -- HTTP endpoints
     * evaluates rules
     * displays results
     * triggers alerts
@@ -50,7 +51,7 @@
 
 * architecture overview
 
-![Architecture overview](documentation/images/architecture.svg)
+  ![Architecture overview](documentation/images/architecture.svg)
 
 ## Install
 
@@ -70,6 +71,9 @@
     * `docker run --name prometheus -d -p 127.0.0.1:9090:9090 prom/prometheus`
   * | browser.
     * http://localhost:9090/
+  * check prometheus server
+    * `docker exec -it prometheus sh`
+    * `prometheus --help`
 
 ### Building from source
 
@@ -120,6 +124,8 @@
     * installed | 👀"{go env GOPATH}/bin"👀
       * NORMALLY, "$HOME/go/bin"
     * _Example of configurations:_ [here](documentation/examples/prometheus.yml)
+  * check prometheus server
+    * `prometheus --help`
 
 #### make
 

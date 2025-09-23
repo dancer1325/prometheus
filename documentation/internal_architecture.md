@@ -223,13 +223,20 @@ The notifier is a [`notifier.Manager`](https://github.com/prometheus/prometheus/
 
 ## Notifier discovery
 
-The notifier discovery manager is a [`discovery.Manager`](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/manager.go#L73-L89) that uses Prometheus's service discovery functionality to find and continuously update the list of Alertmanager instances that the notifier should send alerts to. It runs independently of the notifier manager and feeds it with a stream of target group updates over a [synchronization channel](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L587).
+* notifier discovery manager
+  * == [`discovery.Manager`](https://github.com/prometheus/prometheus/blob/v2.3.1/discovery/manager.go#L73-L89)
+  * uses
+    * Prometheus's service discovery functionality can find & continuously update the list of Alertmanager instances / notifier should send alerts to
+  * runs INDEPENDENTLY of the notifier manager
+  * feeds the notifier manager -- , over a [synchronization channel](https://github.com/prometheus/prometheus/blob/v2.3.1/cmd/prometheus/main.go#L587), with a -- stream of target group updates 
 
-Internally it works like the scrape discovery manager.
+* 's works
+  * == scrape discovery manager's work
 
 ## Web UI and API
 
-Prometheus serves its web UI and API on port `9090` by default. The web UI is available at `/` and serves a human-usable interface for running expression queries, inspecting active alerts, or getting other insight into the status of the Prometheus server.
+Prometheus serves its web UI and API on port `9090` by default
+* The web UI is available at `/` and serves a human-usable interface for running expression queries, inspecting active alerts, or getting other insight into the status of the Prometheus server.
 
 The web API is served under `/api/v1` and allows programmatic [querying, metadata, and server status inspection](https://prometheus.io/docs/prometheus/latest/querying/api/).
 
