@@ -227,6 +227,9 @@ sort_rank: 1
     ```
   * `global`
     * 's parameters apply | ALL OTHER configuration's sections
+  * `scrape_configs`
+    * == resources / Prometheus scrape
+    * see `scrape_config`
 
 * generic placeholders
   * `<boolean>`

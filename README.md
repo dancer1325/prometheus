@@ -84,6 +84,10 @@
     * \>= version specified | [.nvmrc](./web/ui/.nvmrc)
   * npm v8+
 
+* goal
+  * ⚠️ONLY the binary⚠️
+    * -> ❌[sample prometheus.yml](https://github.com/dancer1325/prometheus-website/blob/main/docs/introduction/first_steps.md#configuring-prometheus) NOT included❌
+
 #### how to build a Docker image?
 
 * | this terminal

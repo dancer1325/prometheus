@@ -16,10 +16,6 @@
         * == flag-based configuration
       * "docs/configuration/examples/configuration/prometheusFileBased.yml"
         * == file-based configuration
-  * uncomment "prometheusFileBased.yml"'s line
-    * Problems:
-      * Problem1: Why hot-reload is not happening?
-        * Solution: TODO:
 
 * reload Prometheus rule | runtime
   * ❌BUT NOT AUTOMATICALLY❌
