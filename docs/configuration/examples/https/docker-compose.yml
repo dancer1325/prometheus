@@ -1,0 +1,14 @@
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./web-config.yml:/etc/prometheus/web-config.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # - ./server.crt:/etc/prometheus/server.crt  # | use TLS
+      #- ./server.key:/etc/prometheus/server.key  # | use TLS
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.config.file=/etc/prometheus/web-config.yml'
+      - '--storage.tsdb.path=/prometheus'

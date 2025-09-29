@@ -1,6 +1,5 @@
 * goal
   * types of configurations
-  * 
 
 # requirements
 

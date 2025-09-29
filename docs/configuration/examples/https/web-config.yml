@@ -1,0 +1,12 @@
+# TLS and basic authentication configuration example.
+#
+# 1. TLS  -> certificate and a key file are needed.
+#tls_server_config:
+#  cert_file: server.crt
+#  key_file: server.key
+
+# 2. Basic Auth -- Usernames and passwords required to connect to Prometheus.
+# Passwords are hashed with bcrypt: https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md#about-bcrypt
+basic_auth_users:
+  alice: $2y$10$njg4tYMoaFomDuO16Ge2xediOQ1Bx3nMDg4PcBTuMpEqaLXj9iEUO
+  bob: $2y$10$njg4tYMoaFomDuO16Ge2xediOQ1Bx3nMDg4PcBTuMpEqaLXj9iEUO
