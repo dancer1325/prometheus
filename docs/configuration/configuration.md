@@ -2973,13 +2973,6 @@ alert_relabel_configs:
 
 ### `<remote_write>`
 
-`write_relabel_configs` is relabeling applied to samples before sending them
-to the remote endpoint. Write relabeling is applied after external labels. This
-could be used to limit which samples are sent.
-
-There is a [small demo](/documentation/examples/remote_storage) of how to use
-this functionality.
-
 ```yaml
 # The URL of the endpoint to send samples to.
 url: <string>
@@ -3127,9 +3120,14 @@ metadata_config:
 [ <http_config> ]
 ```
 
-There is a list of
-[integrations](https://prometheus.io/docs/operating/integrations/#remote-endpoints-and-storage)
-with this feature.
+* `write_relabel_configs`
+  * == relabeling process / applied | samples
+    * BEFORE sending them -- to the -- remote endpoint
+    * AFTER external labels
+  * uses
+    * limit the samples / are sent
+* _Example:_ [how to use](/documentation/examples/remote_storage)
+* [integrations / have this feature](https://prometheus.io/docs/operating/integrations/#remote-endpoints-and-storage)
 
 ### `<remote_read>`
 
@@ -3167,9 +3165,7 @@ headers:
 [ <http_config> ]
 ```
 
-There is a list of
-[integrations](https://prometheus.io/docs/operating/integrations/#remote-endpoints-and-storage)
-with this feature.
+* [integrations / have this feature](https://prometheus.io/docs/operating/integrations/#remote-endpoints-and-storage)
 
 ### `<tsdb>`
 
