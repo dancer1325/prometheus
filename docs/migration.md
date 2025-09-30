@@ -28,7 +28,7 @@ This document offers guidance on migrating from Prometheus 2.x to Prometheus 3.0
       represented as `https://example.com/metrics:443` and
       `http://example.com/metrics:80` respectively, add them to your target URLs
   - `agent`
-      - Instead use the dedicated `--agent` CLI flag.
+    - use the dedicated `--agent` CLI flag
   - `remote-write-receiver`
       - Instead use the dedicated `--web.enable-remote-write-receiver` CLI flag to enable the remote write receiver.
   - `auto-gomemlimit`
