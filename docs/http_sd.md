@@ -4,38 +4,38 @@ nav_title: HTTP SD
 sort_rank: 7
 ---
 
-Prometheus provides a generic [HTTP Service Discovery](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config),
-that enables it to discover targets over an HTTP endpoint.
-
-The HTTP Service Discovery is complementary to the supported service
-discovery mechanisms, and is an alternative to [File-based Service Discovery](https://prometheus.io/docs/guides/file-sd/#use-file-based-service-discovery-to-discover-scrape-targets).
-
 ## Comparison between File-Based SD and HTTP SD
 
-Here is a table comparing our two generic Service Discovery implementations.
+* generic Service Discovery implementations
+  * [File SD](https://prometheus.io/docs/guides/file-sd/#use-file-based-service-discovery-to-discover-scrape-targets)
+  * [HTTP SD](https://prometheus.io/docs/prometheus/latest/configuration/configuration/#http_sd_config)
 
-| Item | File SD | HTTP SD |
-| ---- | ------- | ------- |
-| Event Based | Yes, via inotify | No |
-| Update frequency | Instant, thanks to inotify | Following refresh_interval |
-| Format | Yaml or JSON | JSON |
-| Transport | Local file | HTTP/HTTPS |
-| Security | File-Based security | TLS, Basic auth, Authorization header, OAuth2 |
+| Item             | File SD                         | HTTP SD                                       |
+|------------------|---------------------------------|-----------------------------------------------|
+| Event Based      | Yes -- via -- inotify           | No                                            |
+| Update frequency | INSTANT -- thanks to -- inotify | -- based on -- refresh_interval               |
+| Format           | Yaml or JSON                    | JSON                                          |
+| Transport        | Local file                      | HTTP/HTTPS                                    |
+| Security         | File-Based security             | TLS, Basic auth, Authorization header, OAuth2 |
 
 ## Requirements of HTTP SD endpoints
 
-If you implement an HTTP SD endpoint, here are a few requirements you should be
-aware of.
+* uses
+  * | implement an HTTP SD endpoint
 
-The response is consumed as is, unmodified. On each refresh interval (default: 1
-minute), Prometheus will perform a GET request to the HTTP SD endpoint. The GET
-request contains a `X-Prometheus-Refresh-Interval-Seconds` HTTP header with the
-refresh interval.
+* response
+  * consumed as it's
+    * == unmodified
+  * requirements
+    * status: 200
+    * `-H Content-Type: application/json`
+    * UTF-8 formatted 
+* request
+  * `-H X-Prometheus-Refresh-Interval-Seconds:refresh_interval`
 
-The SD endpoint must answer with an HTTP 200 response, with the HTTP Header
-`Content-Type: application/json`. The answer must be UTF-8 formatted.
-If no targets should be transmitted, HTTP 200 must also be emitted, with
-an empty list `[]`. Target lists are unordered.
+* TODO:     
+If no targets should be transmitted, HTTP 200 must also be emitted, with an empty list `[]`
+Target lists are unordered.
 
 Prometheus caches target lists. If an error occurs while fetching an updated
 targets list, Prometheus keeps using the current targets list. The targets list
@@ -66,31 +66,30 @@ headers.
 ]
 ```
 
+* _Examples:_
 
-Examples:
-
-```json
-[
-    {
-        "targets": ["10.0.10.2:9100", "10.0.10.3:9100", "10.0.10.4:9100", "10.0.10.5:9100"],
-        "labels": {
-            "__meta_datacenter": "london",
-            "__meta_prometheus_job": "node"
+    ```json
+    [
+        {
+            "targets": ["10.0.10.2:9100", "10.0.10.3:9100", "10.0.10.4:9100", "10.0.10.5:9100"],
+            "labels": {
+                "__meta_datacenter": "london",
+                "__meta_prometheus_job": "node"
+            }
+        },
+        {
+            "targets": ["10.0.40.2:9100", "10.0.40.3:9100"],
+            "labels": {
+                "__meta_datacenter": "london",
+                "__meta_prometheus_job": "alertmanager"
+            }
+        },
+        {
+            "targets": ["10.0.40.2:9093", "10.0.40.3:9093"],
+            "labels": {
+                "__meta_datacenter": "newyork",
+                "__meta_prometheus_job": "alertmanager"
+            }
         }
-    },
-    {
-        "targets": ["10.0.40.2:9100", "10.0.40.3:9100"],
-        "labels": {
-            "__meta_datacenter": "london",
-            "__meta_prometheus_job": "alertmanager"
-        }
-    },
-    {
-        "targets": ["10.0.40.2:9093", "10.0.40.3:9093"],
-        "labels": {
-            "__meta_datacenter": "newyork",
-            "__meta_prometheus_job": "alertmanager"
-        }
-    }
-]
-```
+    ]
+    ```

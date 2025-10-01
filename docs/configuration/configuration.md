@@ -415,7 +415,7 @@ sort_rank: 1
     dockerswarm_sd_configs:
       [ - <dockerswarm_sd_config> ... ]
     
-    # List of DNS service discovery configurations.
+    # DNS service discovery configurations
     dns_sd_configs:
       [ - <dns_sd_config> ... ]
     
@@ -1176,36 +1176,47 @@ for a detailed example of configuring Prometheus for Docker Swarm.
 
 ### `<dns_sd_config>`
 
-A DNS-based service discovery configuration allows specifying a set of DNS
-domain names which are periodically queried to discover a list of targets. The
-DNS servers to be contacted are read from `/etc/resolv.conf`.
+* DNS-based service discovery configuration
+  * syntax
 
-This service discovery method only supports basic DNS A, AAAA, MX, NS and SRV
-record queries, but not the advanced DNS-SD approach specified in
-[RFC6763](https://tools.ietf.org/html/rfc6763).
+    ```yaml
+    # DNS domain names / be queried
+    names:
+      [ - <string> ]
+    
+    # The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
+    [ type: <string> | default = 'SRV' ]
+    
+    # The port number used if the query type is not SRV.
+    [ port: <int>]
+    
+    # The time after which the provided names are refreshed.
+    [ refresh_interval: <duration> | default = 30s ]
+    ```
 
-The following meta labels are available on targets during [relabeling](#relabel_config):
-
-* `__meta_dns_name`: the record name that produced the discovered target.
-* `__meta_dns_srv_record_target`: the target field of the SRV record
-* `__meta_dns_srv_record_port`: the port field of the SRV record
-* `__meta_dns_mx_record_target`: the target field of the MX record
-* `__meta_dns_ns_record_target`: the target field of the NS record
-
-```yaml
-# A list of DNS domain names to be queried.
-names:
-  [ - <string> ]
-
-# The type of DNS query to perform. One of SRV, A, AAAA, MX or NS.
-[ type: <string> | default = 'SRV' ]
-
-# The port number used if the query type is not SRV.
-[ port: <int>]
-
-# The time after which the provided names are refreshed.
-[ refresh_interval: <duration> | default = 30s ]
-```
+  * allows
+    * specifying DNS domain names / periodically queried -- to -- discover targets
+  * requirements
+    * specify DNS servers | /etc/resolv.conf
+  * support
+    * DNS A,
+    * DNS AAAA,
+    * DNS MX,
+    * DNS NS
+    * SRV record queries
+  * NOT support
+    * [advanced DNS-SD approach](https://tools.ietf.org/html/rfc6763)
+  * target's meta labels | [relabeling](#relabel_config)
+    * `__meta_dns_name`
+      * record name / produced the discovered target
+    * `__meta_dns_srv_record_target`
+      * SRV record's target field 
+    * `__meta_dns_srv_record_port`
+      * SRV record's port field 
+    * `__meta_dns_mx_record_target`
+      * MX record's target field 
+    * `__meta_dns_ns_record_target`
+      * NS record's target field 
 
 ### `<ec2_sd_config>`
 
@@ -1570,7 +1581,7 @@ for a detailed example of configuring Prometheus with PuppetDB.
 * service discovery's
   * NON-target labels
     * `__meta_filepath`
-      * == filepath FROM which the target was extracted
+      * == filepath | target was extracted
 
 ### `<gce_sd_config>`
 
@@ -1696,47 +1707,46 @@ role: <string>
 
 ### `<http_sd_config>`
 
-HTTP-based service discovery provides a more generic way to configure static targets
-and serves as an interface to plug in custom service discovery mechanisms.
+* HTTP-based service discovery
+  * 's syntax
 
-It fetches targets from an HTTP endpoint containing a list of zero or more
-`<static_config>`s. The target must reply with an HTTP 200 response.
-The HTTP header `Content-Type` must be `application/json`, and the body must be
-valid JSON.
+    ```yaml
+    # URL | targets are fetched
+    url: <string>
+    
+    # FREQUENCY | re-query the endpoint
+    [ refresh_interval: <duration> | default = 60s ]
+    
+    # HTTP client settings
+    # 1. authentication methods
+    # 2. proxy configurations
+    # 3. TLS options,
+    # 4. custom HTTP headers
+    [ <http_config> ]
+    ```
 
-Example response body:
+  * fetches targets -- from an -- HTTP endpoint / 
+    * contains >= 0 `<static_config>`s
+    * must reply -- with -- HTTP 200 response
+    * requirements
+      * `-H Content-Type:application/json`
+        * -> request body == valid JSON
 
-```json
-[
-  {
-    "targets": [ "<host>", ... ],
-    "labels": {
-      "<labelname>": "<labelvalue>", ...
-    }
-  },
-  ...
-]
-```
-
-The endpoint is queried periodically at the specified refresh interval.
-The `prometheus_sd_http_failures_total` counter metric tracks the number of
-refresh failures.
-
-Each target has a meta label `__meta_url` during the
-[relabeling phase](#relabel_config). Its value is set to the
-URL from which the target was extracted.
-
-```yaml
-# URL from which the targets are fetched.
-url: <string>
-
-# Refresh interval to re-query the endpoint.
-[ refresh_interval: <duration> | default = 60s ]
-
-# HTTP client settings, including authentication methods (such as basic auth and
-# authorization), proxy configurations, TLS options, custom HTTP headers, etc.
-[ <http_config> ]
-```
+        ```json
+        [
+          {
+            "targets": [ "<host>", ... ],
+            "labels": {
+              "<labelname>": "<labelvalue>", ...
+            }
+          },
+          ...
+        ]
+        ```
+    * 's metadata
+      * `__meta_url`
+        * 's value 
+          * == URL | target was extracted
 
 ### `<ionos_sd_config>`
 

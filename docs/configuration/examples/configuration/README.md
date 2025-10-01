@@ -60,7 +60,15 @@
     * check ALL defined targets & target groups
   * http://localhost:9090/service-discovery
     * check ALL service discoveries
-
+#### `<http_sd_config>`
+* `python3 http-sd-server.py`
+* `docker compose up -d`
+* | browser,
+  * http://localhost:9090/targets
+    * check ALL defined targets & target groups
+  * http://localhost:9090/service-discovery
+    * `__meta_url` 
+      * appear
 
 
 * | [database-targets.yml](targets/database-targets.yml),

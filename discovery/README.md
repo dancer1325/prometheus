@@ -17,7 +17,9 @@
     * types
       * `__meta_<sdname>_<key>`
         * if it's value could be array -> converted -- to -- 'value1, value2, ...' 
-          * _Example:_ `__meta_consul_tags: ",web,api,production,"`
+          * _Examples:_
+            * `__meta_consul_tags: ",web,api,production,"`
+            * `__meta_filepath: "/etc/prometheus/targets/webServices.yml"`
       * `__address__: targetHost:targetPort`
         * `targetHost`
           * recommendation
@@ -108,7 +110,6 @@ or incorrect metadata.
 The information obtained from service discovery is not considered sensitive
 security wise. Do not return secrets in metadata, anyone with access to
 the Prometheus server will be able to see them.
-
 
 ## Writing an SD mechanism
 
@@ -257,3 +258,11 @@ Here are some non-obvious parts of adding service discoveries that need to be ve
 ### _Examples:_ Eureka PR
 
 - [Eureka PR](https://github.com/prometheus/prometheus/pull/3369)
+
+
+## built-in Prometheus SD metrics
+
+* goal
+  * metrics / exported by Prometheus -- about -- SD mechanisms
+
+* 💡`prometheus_sd_serviceDiscoveryName_metricName`💡
