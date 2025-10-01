@@ -1,0 +1,22 @@
+[
+  {
+    "targets": [
+      "host.docker.internal:9100"
+    ],
+    "labels": {
+      "service_type": "infrastructure",
+      "environment": "production",
+      "datacenter": "us-east-1"
+    }
+  },
+  {
+    "targets": [
+      "prometheus:9090"
+    ],
+    "labels": {
+      "service_type": "monitoring",
+      "environment": "production",
+      "team": "platform"
+    }
+  }
+]

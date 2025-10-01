@@ -293,6 +293,8 @@ sort_rank: 1
     * 1! job / 1 scrape configuration
   * ⚠️advanced configurations⚠️
     * \>1 target groups / 1 job
+      * use cases
+        * replicas SAME service
 
 * 👀ways to configure the targets👀
   * statically
@@ -305,7 +307,7 @@ sort_rank: 1
 * syntax
     ```yaml
     # The job name assigned to scraped metrics by default.
-    # MUST be UNIQUE ACROSS ALL scrape configurations
+    # MUST be UNIQUE | ALL scrape configurations
     job_name: <job_name>
     
     # How frequently to scrape targets from this job.
@@ -425,7 +427,7 @@ sort_rank: 1
     eureka_sd_configs:
       [ - <eureka_sd_config> ... ]
     
-    # List of file service discovery configurations.
+    # == file service discovery configurationS
     file_sd_configs:
       [ - <file_sd_config> ... ]
     
@@ -1548,7 +1550,7 @@ for a detailed example of configuring Prometheus with PuppetDB.
             * ⚠️if the parent directory contains MANY other-NON-prometheus-related files -> may cause issues⚠️
               * Reason:🧠these files are ALSO watched 🧠
         * ALLOWED files formats
-          * YAML
+          * YAML -- .yml OR .yaml --
           * JSON
         * ONLY well-formed target groups changes -> are applied
 
@@ -1558,22 +1560,14 @@ for a detailed example of configuring Prometheus with PuppetDB.
     files:
       [ - <filename_pattern> ... ]
     
-    # Refresh interval to re-read the files.
+    # interval | re-read the files
     [ refresh_interval: <duration> | default = 5m ]
     ```
 
-
-As a fallback, the file contents are also re-read periodically at the specified
-refresh interval.
-
-Each target has a meta label `__meta_filepath` during the
-[relabeling phase](#relabel_config). Its value is set to the
-filepath from which the target was extracted.
-
-There is a list of [integrations](https://prometheus.io/docs/operating/integrations/#file-service-discovery) with this discovery mechanism
-
-Where `<filename_pattern>` may be a path ending in `.json`, `.yml` or `.yaml`
-The last path segment may contain a single `*` that matches any character sequence, e.g. `my/path/tg_*.json`.
+* service discovery's
+  * NON-target labels
+    * `__meta_filepath`
+      * == filepath FROM which the target was extracted
 
 ### `<gce_sd_config>`
 
@@ -2681,21 +2675,23 @@ The following meta labels are available on targets during [relabeling](#relabel_
 
 * syntax
     ```yaml
-    # The targets specified by the static config.
+    # targets / static config
     targets:
       [ - '<host>' ]
     
-    # Labels assigned to all metrics scraped from the targets.
+    # labels / assigned to ALL metrics scraped -- from the -- targets
     labels:
       [ <labelname>: <labelvalue> ... ]
     ```
 
 ### `<relabel_config>`
 
-Relabeling is a powerful tool to dynamically rewrite the label set of a target before
-it gets scraped. Multiple relabeling steps can be configured per scrape configuration.
-They are applied to the label set of each target in order of their appearance
-in the configuration file.
+* Relabeling
+  * == powerful tool /
+    * BEFORE scrapes the target, DYNAMICALLY rewrite the target's label
+  * Multiple relabeling steps can be configured per scrape configuration
+    * They are applied to the label set of each target in order of their appearance
+    in the configuration file.
 
 Initially, aside from the configured per-target labels, a target's `job`
 label is set to the `job_name` value of the respective scrape configuration.

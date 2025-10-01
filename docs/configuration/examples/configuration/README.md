@@ -43,12 +43,26 @@
 * _Example of generic placeholders:_ [prometheusGenericPlaceHolders.yml](prometheusGenericPlaceHolders.yml)
 
 ## `scrape_config`
-
-* | root path,
-  * `prometheus --config.file=docs/configuration/examples/configuration/prometheusScrapeConfigs.yml --web.listen-address=:9090`
+### 1! job / 1 scrape configuration
+* `docker compose up -d`
+* | browser, http://localhost:9090/targets
+  * check ALL defined targets
+### >1 target groups / 1 job
+* `docker compose up -d`
+* | browser, http://localhost:9090/targets
+    * check ALL defined targets & target groups
+### configure target / DYNAMICALLY
+#### `file_sd_configs`
+* see [targets](targets)
+* `docker compose up -d`
 * | browser, 
   * http://localhost:9090/targets
-    * check ALL defined targets
+    * check ALL defined targets & target groups
+  * http://localhost:9090/service-discovery
+    * check ALL service discoveries
+
+
+
 * | [database-targets.yml](targets/database-targets.yml),
   * uncomment the line
   * `ps aux | grep prometheus`
@@ -56,5 +70,6 @@
   * | browser,
     * http://localhost:9090/targets
       * check NEW label added
+
 
 * TODO:

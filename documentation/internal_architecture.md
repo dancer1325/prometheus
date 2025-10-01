@@ -182,7 +182,13 @@ Finally, a scrape loop periodically scrapes its targets over HTTP and tries to d
 
 ## Storage
 
-Prometheus stores time series samples in a local time series database (TSDB) and optionally also forwards a copy of all samples to a set of configurable remote endpoints. Similarly, Prometheus reads data from the local TSDB and optionally also from remote endpoints. Both local and remote storage subsystems are explained below.
+* Prometheus 
+  * | local time series database (TSDB)
+    * stores time series samples
+    * reads
+  * OPTIONALLY, |  configurable remote endpoints
+    * forwards a copy of ALL samples 
+    * read
 
 ### Fanout storage
 

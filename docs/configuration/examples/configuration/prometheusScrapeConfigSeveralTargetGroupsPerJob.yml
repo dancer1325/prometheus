@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 15s      # default
+  evaluation_interval: 15s
+
+scrape_configs:
+  # >1 target groups / 1 job
+  - job_name: 'web-applications'
+    static_configs:
+      - targets:
+          - 'app1:80'
+          - 'app2:80'
+          - 'app3:80'
+        labels:
+          service_type: 'web'
+          environment: 'development'

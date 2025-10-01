@@ -1,0 +1,12 @@
+global:
+  scrape_interval: 15s      # default
+  evaluation_interval: 15s
+
+scrape_configs:
+  # 1! job / 1 scrape configuration
+  - job_name: 'my-application'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+    metrics_path: /metrics
+    scrape_timeout: 10s
