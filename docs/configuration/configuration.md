@@ -1553,6 +1553,9 @@ for a detailed example of configuring Prometheus with PuppetDB.
           * YAML -- .yml OR .yaml --
           * JSON
         * ONLY well-formed target groups changes -> are applied
+  * use cases
+    * custom OR unusual
+    * relational database
 
 * syntax
     ```yaml
@@ -2688,10 +2691,10 @@ The following meta labels are available on targets during [relabeling](#relabel_
 
 * Relabeling
   * == powerful tool /
-    * BEFORE scrapes the target, DYNAMICALLY rewrite the target's label
-  * Multiple relabeling steps can be configured per scrape configuration
-    * They are applied to the label set of each target in order of their appearance
-    in the configuration file.
+    * 👀DYNAMICALLY rewrite the target's label👀
+      * BEFORE scrapes the target, 
+      * MULTIPLE relabeling steps can be configured / scrape configuration
+      * applied | EACH target's label set / follows order of appearance | configuration file
 
 Initially, aside from the configured per-target labels, a target's `job`
 label is set to the `job_name` value of the respective scrape configuration.

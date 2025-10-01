@@ -12,8 +12,22 @@
 ### Does this make sense as an SD?
 
 * SD mechanism
-  * requirements
+  * 👀's contextual information👀
+    * == key/value pairs
+    * types
+      * `__meta_<sdname>_<key>`
+        * if it's value could be array -> converted -- to -- 'value1, value2, ...' 
+          * _Example:_ `__meta_consul_tags: ",web,api,production,"`
+      * `__address__: targetHost:targetPort`
+        * `targetHost`
+          * recommendation
+            * IP address
+              * Reason:🧠avoid DNS lookups🧠
+    * == target's descriptive information
+      * ❌!= metrics❌
+  * ⚠️requirements⚠️
     * well established
+    * generic / admit MULTIPLE variations
     * used | MULTIPLE organizations
     * should allow discovering of machines &/OR services / run | SOMEWHERE
     * 's implementation
@@ -22,51 +36,23 @@
       * brand of EXISTING SD mechanism
       * application / discover SAME software
         * _Example:_ Kafka or Cassandra server / find OTHER Kafka or Cassandra serverS
-  * 's design
-    * generic / admit MULTIPLE variations
+      * business logic,
+      * filtering,
+      * data transformations 
 
-* `file_sd`
-  * == SD mechanism 
-  * use cases
-    * custom OR unusual
-    * talk to a relational database
+* recommendations
+  * | configuration management systems (_Examples:_ Chef, Puppet, Ansible)
+    * ❌NOT use their APIs directly❌
+    * 👀's template + `file_sd`👀
 
-* TODO: 
-For configuration management systems like Chef, while they do have a
-database/API that'd in principle make sense to talk to for service discovery,
-the idiomatic approach is to use Chef's templating facilities to write out a
-file for use with `file_sd`.
+### Mapping from SD -- to -- Prometheus
 
+* 's design
+  * SD extracts ALL potentially useful information
+  * user chooses / they need -- via -- [relabelling](https://prometheus.io/docs/operating/configuration/#<relabel_config>)
 
-### Mapping from SD to Prometheus
-
-The general principle with SD is to extract all the potentially useful
-information we can out of the SD, and let the user choose what they need of it
-using
-[relabelling](https://prometheus.io/docs/operating/configuration/#<relabel_config>).
-This information is generally termed metadata.
-
-Metadata is exposed as a set of key/value pairs (labels) per target
-* The keys
-are prefixed with `__meta_<sdname>_<key>`, and there should also be an `__address__`
-label with the host:port of the target (preferably an IP address to avoid DNS
-lookups)
-* No other labelnames should be exposed.
-
-It is very common for initial pull requests for new SDs to include hardcoded
-assumptions that make sense for the author's setup
-* SD should be generic,
-any customisation should be handled via relabelling
-* There should be basically
-no business logic, filtering, or transformations of the data from the SD beyond
-that which is needed to fit it into the metadata data model. 
-
-Arrays (e.g. a list of tags) should be converted to a single label with the
-array values joined with a comma. Also prefix and suffix the value with a
-comma. So for example the array `[a, b, c]` would become `,a,b,c,`. As
-relabelling regexes are fully anchored, this makes it easier to write correct
-regexes against (`.*,a,.*` works no matter where `a` appears in the list). The
-canonical example of this is `__meta_consul_tags`.
+* TODO:
+As relabelling regexes are fully anchored, this makes it easier to write correct regexes against (`.*,a,.*` works no matter where `a` appears in the list)
 
 Maps, hashes and other forms of key/value pairs should be all prefixed and
 exposed as labels. For example for EC2 tags, there would be
@@ -128,7 +114,9 @@ the Prometheus server will be able to see them.
 
 ### The SD interface
 
-A Service Discovery (SD) mechanism has to discover targets and provide them to Prometheus. We expect similar targets to be grouped together, in the form of a [target group](https://pkg.go.dev/github.com/prometheus/prometheus/discovery/targetgroup#Group). The SD mechanism sends the targets down to prometheus as list of target groups.
+A Service Discovery (SD) mechanism has to discover targets and provide them to Prometheus
+* We expect similar targets to be grouped together, in the form of a [target group](https://pkg.go.dev/github.com/prometheus/prometheus/discovery/targetgroup#Group)
+* The SD mechanism sends the targets down to prometheus as list of target groups.
 
 An SD mechanism has to implement the `Discoverer` Interface:
 ```go
@@ -137,8 +125,12 @@ type Discoverer interface {
 }
 ```
 
-Prometheus will call the `Run()` method on a provider to initialize the discovery mechanism. The mechanism will then send *all* the target groups into the channel. 
-Now the mechanism will watch for changes. For each update it can send all target groups, or only changed and new target groups, down the channel. `Manager` will handle 
+Prometheus will call the `Run()` method on a provider to initialize the discovery mechanism
+* The mechanism will then send *all* the target groups into the channel
+* 
+Now the mechanism will watch for changes
+* For each update it can send all target groups, or only changed and new target groups, down the channel
+* `Manager` will handle 
 both cases.
 
 For example if we had a discovery mechanism and it retrieves the following groups:
@@ -262,8 +254,6 @@ Here are some non-obvious parts of adding service discoveries that need to be ve
 
 <!-- TODO: Add best-practices -->
 
-### Examples of Service Discovery pull requests
+### _Examples:_ Eureka PR
 
-The examples given might become out of date but should give a good impression about the areas touched by a new service discovery.
-
-- [Eureka](https://github.com/prometheus/prometheus/pull/3369)
+- [Eureka PR](https://github.com/prometheus/prometheus/pull/3369)
