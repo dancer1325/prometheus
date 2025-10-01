@@ -306,20 +306,25 @@ sort_rank: 1
 
 * syntax
     ```yaml
-    # The job name assigned to scraped metrics by default.
+    # label added | ALL metrics
     # MUST be UNIQUE | ALL scrape configurations
     job_name: <job_name>
     
-    # How frequently to scrape targets from this job.
+    # FREQUENCY / scrape targets -- from -- this job
     [ scrape_interval: <duration> | default = <global_config.scrape_interval> ]
     
-    # Per-scrape timeout when scraping this job.
-    # It cannot be greater than the scrape interval.
+    # | scrap a job, MAXIMUM time spent
+    #   OTHERWISE, timeout failure
+    # < scrape_interval
     [ scrape_timeout: <duration> | default = <global_config.scrape_timeout> ]
     
-    # The protocols to negotiate during a scrape with the client.
-    # Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
-    # OpenMetricsText1.0.0, PrometheusText0.0.4, PrometheusText1.0.0.
+    # metric formats / used by Prometheus | scrape a target
+    # supported values (case sensitive): 
+    #   1. PrometheusProto,
+    #   2. OpenMetricsText0.0.1,
+    #   3. OpenMetricsText1.0.0,
+    #   4. PrometheusText0.0.4,
+    #   5. PrometheusText1.0.0
     [ scrape_protocols: [<string>, ...] | default = <global_config.scrape_protocols> ]
     
     # Fallback protocol to use if a scrape returns blank, unparsable, or otherwise

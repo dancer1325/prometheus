@@ -44,15 +44,44 @@
 
 ## `scrape_config`
 ### 1! job / 1 scrape configuration
+* [prometheusScrapeConfigOneUniqueJob.yml](prometheusScrapeConfigOneUniqueJob.yml)
 * `docker compose up -d`
 * | browser, http://localhost:9090/targets
-  * check ALL defined targets
+    * check ALL defined targets
 ### >1 target groups / 1 job
+* [prometheusScrapeConfigSeveralTargetGroupsPerJob.yml](prometheusScrapeConfigSeveralTargetGroupsPerJob.yml)
 * `docker compose up -d`
 * | browser, http://localhost:9090/targets
     * check ALL defined targets & target groups
+### `job_name`
+* [prometheusJobName.yml](prometheusJobName.yml)
+* `docker compose up -d`
+* | browser, http://localhost:9090/targets
+  * check ALL defined targets`
+### `scrape_interval`
+* [prometheusScrapeConfigScrapeInterval.yml](prometheusScrapeConfigScrapeInterval.yml)
+* `docker compose up -d`
+* http://localhost:9090/targets
+  * refresh checking LAST time of scrape
+### `scrape_timeout`
+* [prometheusScrapeConfigScrapeInterval.yml](prometheusScrapeConfigScrapeInterval.yml)
+* `docker compose up -d`
+* http://localhost:9090/targets
+  * refresh checking LAST time of scrape
+  * | 8s,
+    * target is down
+### `scrape_protocols`
+* [prometheusScrapeConfigScrapeProtocols.yml](prometheusScrapeConfigScrapeProtocols.yml)
+* `docker compose up -d`
+* http://localhost:9090/targets
+  * refresh checking LAST time of scrape
+* http://localhost:9090/query
+  * `scrape_duration_seconds`
+    * check DIFFERENT samples -- based on -- scrape protocol
+
 ### configure target / DYNAMICALLY
 #### `file_sd_configs`
+* [prometheusFileServiceDiscovery.yml](prometheusFileServiceDiscovery.yml)
 * see [targets](targets)
 * `docker compose up -d`
 * | browser, 
@@ -61,6 +90,7 @@
   * http://localhost:9090/service-discovery
     * check ALL service discoveries
 #### `<http_sd_config>`
+* [prometheusHTTPServiceDiscovery.yml](prometheusHTTPServiceDiscovery.yml)
 * `python3 http-sd-server.py`
 * `docker compose up -d`
 * | browser,
@@ -69,15 +99,3 @@
   * http://localhost:9090/service-discovery
     * `__meta_url` 
       * appear
-
-
-* | [database-targets.yml](targets/database-targets.yml),
-  * uncomment the line
-  * `ps aux | grep prometheus`
-  * `kill -HUP PREVIOUS_PID_GOT`
-  * | browser,
-    * http://localhost:9090/targets
-      * check NEW label added
-
-
-* TODO:

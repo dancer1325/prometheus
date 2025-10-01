@@ -1,0 +1,13 @@
+# Prometheus configuration | .yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: 'prometheus'    # 1. job_name used as target label
+    static_configs:
+      - targets: [ 'localhost:9090' ]
+  # 2. job_name     MUST be unique | ALL scrape configuration         -- uncomment NEXT lines to see the error --
+#  - job_name: 'prometheus'
+#    static_configs:
+#      - targets: ['localhost:9090']

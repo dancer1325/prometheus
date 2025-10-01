@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: 'nonExisting'
+    scrape_interval: 10s
+    # 1. MUST be < scrape_interval
+    #scrape_timeout: 5s
+    # 2. | scrap a job, MAXIMUM time spent
+    scrape_timeout: 8s
+    static_configs:
+      - targets: [ 'localhost:9070' ]
