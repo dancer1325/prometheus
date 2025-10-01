@@ -1,0 +1,24 @@
+global:
+  scrape_interval: 15s
+  # Default protocols
+  scrape_protocols: 
+    - "OpenMetricsText1.0.0"
+    - "PrometheusText0.0.4"
+
+scrape_configs:
+  # modern services -> ONLY OpenMetrics
+  - job_name: 'modern-apps'
+    scrape_protocols: ["OpenMetricsText1.0.0"]
+    static_configs:
+      - targets: ['nginx-exporter-1:9113', 'nginx-exporter-2:9114', 'nginx-exporter-3:9115']
+  
+  # legacy exporters -> ONLY classic format
+  - job_name: 'legacy-exporters'
+    scrape_protocols: ["PrometheusText0.0.4"]
+    static_configs:
+      - targets: ['node-exporter:9100']
+  
+  # Prometheus self
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

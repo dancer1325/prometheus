@@ -23,19 +23,22 @@ services:
       #- ./prometheusScrapeConfigScrapeTimeout.yml:/etc/prometheus/prometheus.yml
 
       # 1.3   scrape_protocols
-      - ./prometheusScrapeConfigScrapeProtocols.yml:/etc/prometheus/prometheus.yml
+      #- ./prometheusScrapeConfigScrapeProtocols.yml:/etc/prometheus/prometheus.yml
 
-      # 1.4   1! job / 1 scrape configuration
+      # 1.4   fallback_scrape_protocol
+      - ./prometheusScrapeConfigFallbackScrapeProtocol.yml:/etc/prometheus/prometheus.yml
+
+      # 1.5   1! job / 1 scrape configuration
       #- ./prometheusScrapeConfigOneUniqueJob.yml:/etc/prometheus/prometheusOneUniqueJob.yml
 
-      # 1.4  >1 target groups / 1 job
+      # 1.6  >1 target groups / 1 job
       #- ./prometheusScrapeConfigSeveralTargetGroupsPerJob.yml:/etc/prometheus/prometheus.yml
 
-      # 1.6 file service discovery
+      # 1.7 file service discovery
       #- ./prometheusFileServiceDiscovery.yml:/etc/prometheus/prometheus.yml
       #- ./targets:/etc/prometheus/targets
 
-      # 1.7 HTTP service discovery
+      # 1.8 HTTP service discovery
       #- ./prometheusHTTPServiceDiscovery.yml:/etc/prometheus/prometheus.yml
 
     command:

@@ -78,6 +78,12 @@
 * http://localhost:9090/query
   * `scrape_duration_seconds`
     * check DIFFERENT samples -- based on -- scrape protocol
+### `fallback_scrape_protocol`
+* `python3 brokenExporter.py`
+* [prometheusScrapeConfigFallbackScrapeProtocol.yml](prometheusScrapeConfigFallbackScrapeProtocol.yml)
+* `docker compose up -d`
+* http://localhost:9090/targets
+  * ERROR | scrape localhost:9999  
 
 ### configure target / DYNAMICALLY
 #### `file_sd_configs`

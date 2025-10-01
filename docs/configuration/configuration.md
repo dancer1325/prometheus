@@ -327,10 +327,8 @@ sort_rank: 1
     #   5. PrometheusText1.0.0
     [ scrape_protocols: [<string>, ...] | default = <global_config.scrape_protocols> ]
     
-    # Fallback protocol to use if a scrape returns blank, unparsable, or otherwise
-    # invalid Content-Type.
-    # Supported values (case sensitive): PrometheusProto, OpenMetricsText0.0.1,
-    # OpenMetricsText1.0.0, PrometheusText0.0.4, PrometheusText1.0.0.
+    # if a scrape returns blank, unparsable, OR invalid Content-Type -> use fallback protocol 
+    # supported values (case sensitive)     ==      scrape_protocols' values   
     [ fallback_scrape_protocol: <string> ]
     
     # Whether to scrape a classic histogram, even if it is also exposed as a native
