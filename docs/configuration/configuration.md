@@ -75,8 +75,8 @@ sort_rank: 1
       external_labels:
         [ <labelname>: <labelvalue> ... ]
     
-      # File to which PromQL queries are logged.
-      # Reloading the configuration will reopen the file.
+      # file | log PromQL queries
+      #   | reload the configuration, reopen the file (!= create NEW one)
       [ query_log_file: <string> ]
     
       # File to which scrape failures are logged.
@@ -390,8 +390,8 @@ sort_rank: 1
     # response from the scraped target.
     [ enable_compression: <boolean> | default = true ]
     
-    # File to which scrape failures are logged.
-    # Reloading the configuration will reopen the file.
+    # file | log scrape failures
+    #   | reload the configuration, reopen the file (!= create NEW one)
     [ scrape_failure_log_file: <string> ]
     
     # HTTP client settings, including authentication methods (such as basic auth and
