@@ -26,7 +26,7 @@ services:
       #- ./prometheusScrapeConfigScrapeProtocols.yml:/etc/prometheus/prometheus.yml
 
       # 1.4   fallback_scrape_protocol
-      - ./prometheusScrapeConfigFallbackScrapeProtocol.yml:/etc/prometheus/prometheus.yml
+      #- ./prometheusScrapeConfigFallbackScrapeProtocol.yml:/etc/prometheus/prometheus.yml
 
       # 1.5   1! job / 1 scrape configuration
       #- ./prometheusScrapeConfigOneUniqueJob.yml:/etc/prometheus/prometheusOneUniqueJob.yml
@@ -40,6 +40,9 @@ services:
 
       # 1.8 HTTP service discovery
       #- ./prometheusHTTPServiceDiscovery.yml:/etc/prometheus/prometheus.yml
+
+      # 1.9 metrics_path
+      - ./prometheusScrapeConfigMetricsPath.yml:/etc/prometheus/prometheus.yml
 
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -62,6 +65,7 @@ services:
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
 
+  # Nginx
   app1:
     image: nginx
     ports:
@@ -104,3 +108,14 @@ services:
       - "9115:9113"
     command:
       - '-nginx.scrape-uri=http://app3:80/nginx_status'
+
+  # Spring Boot con Actuator
+  spring-app:
+    image: dancer13/gs-spring-boot-docker-6
+    ports:
+      - "8084:8080"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - MANAGEMENT_ENDPOINT_METRICS_ENABLED=true
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true

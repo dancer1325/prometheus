@@ -84,7 +84,12 @@
 * `docker compose up -d`
 * http://localhost:9090/targets
   * ERROR | scrape localhost:9999  
-
+### `metrics_path`
+* `docker build -f Dockerfile.springboot -t my-springboot-app .`
+* [prometheusScrapeConfigMetricsPath.yml](prometheusScrapeConfigMetricsPath.yml)
+* `docker compose up -d`
+* http://localhost:9090/targets
+  * check DIFFERENT metric path
 ### configure target / DYNAMICALLY
 #### `file_sd_configs`
 * [prometheusFileServiceDiscovery.yml](prometheusFileServiceDiscovery.yml)

@@ -336,7 +336,7 @@ sort_rank: 1
     [ always_scrape_classic_histograms: <boolean> |
     default = <global.always_scrape_classic_histograms> ]
     
-    # The HTTP resource path on which to fetch metrics from targets.
+    # HTTP resource path | fetch targets' metrics 
     [ metrics_path: <path> | default = /metrics ]
     
     # honor_labels controls how Prometheus handles conflicts between labels that are
