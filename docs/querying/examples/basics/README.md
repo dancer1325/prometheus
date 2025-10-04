@@ -1,8 +1,28 @@
-* goal
-  *
-
 # PromQL
-
+* `docker run --name prometheus -d -p 127.0.0.1:9090:9090 prom/prometheus`
+## functional query language
+### aggregation
+* | browser,
+  * http://localhost:9090/query
+    * `sum(rate(http_requests_total[5m]))`
+### pure
+* `rate(http_requests_total[5m])`
+  * SAME entry | SAME time -> SAME output
+### immutable
+* `rate(http_requests_total[5m])`
+  * ❌NO modify input data❌
+### higher-order functions
+* `sum by (job) (rate(http_requests_total[5m]))`
+### declarative
+* `sum(http_requests_total) by (status_code)`
+## lets, about time series data | real time,
+### select
+* | browser,
+  * http://localhost:9090/query
+    * `http_requests_total`
+    * `{__name__=~".+"}`
+      * check ALL supported metrics
+### aggregate
 * | browser,
   * http://localhost:9090/query
     * `sum(rate(http_requests_total[5m]))`
@@ -15,39 +35,60 @@
       * == select time series data
     * `sum(http_requests_total)`
       * == aggregate time series data
+## `{__name__=~".+"}`
+* | browser,
+  * http://localhost:9090/query
     * `{__name__=~".+"}`
-      * check ALL supported metrics
 
-## instant query
+## Expression queries
+### instant query
 * | table
+#### ALLOWED results
+##### instant vector
+* `prometheus_http_requests_total`
+##### scalar
+* `prometheus_http_requests_total * 100`
+##### string
+* `"hello world"`
 
-## range query
+### range query
 * | graph
+#### ALLOWED results
+##### instant vector
+* `rate(prometheus_http_requests_total[5m])`
+##### scalar
+* `sum(prometheus_http_requests_total)`
 
 # Expression language data types
 
 ## instant vector
-
 * | browser,
   * http://localhost:9090/query, | table
-    * `http_requests_total`
+    * `prometheus_http_requests_total`
       * check returned expressions structure
         * ❌NOT contain @timestamp❌
           * Reason:🧠redundant == the one | you are querying🧠
+### if native histograms ingested | TSDB
+* TODO:
 
 ## range vector
-
 * | browser,
   * http://localhost:9090/query, | table
-    * `http_requests_total[5m]`
+    * `prometheus_http_requests_total[5m]`
       * check returned expressions structure
         * contain @timestamp
+### if native histograms ingested | TSDB
+* TODO:
 
 ## scalar
-
 * | browser,
   * http://localhost:9090/query, | table
-    * `http_requests_total * 100`
+    * `prometheus_http_requests_total * 100`
+
+## string
+* | browser,
+  * http://localhost:9090/query, | table
+    * `"hello world"`
 
 # Literals
 

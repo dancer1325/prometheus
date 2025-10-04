@@ -6,31 +6,20 @@ sort_rank: 1
 
 * Prometheus Query Language (PromQL)
   * == functional query language /
+    * Reason of functional:🧠
+      * aggregation
+      * pure 
+      * immutable
+      * higher-order functions
+      * declarative
+        * == what you want != how to do🧠
     * provided 
       * -- by -- Prometheus
     * lets the user 
       * about time series data | real time,
         * select
         * aggregate 
-    * 👀types -- based on -- execution time👀
-      * [instant query](api.md#instant-queries)
-        * == Prometheus UI's "Table" tab
-        * evaluated | SOME point in time
-        * supported types
-          * ANY data type | root of the expression
-      * [range query](api.md#range-queries) / equally-spaced steps
-        * == instant query / run MULTIPLE times | DIFFERENT timestamps
-        * == Prometheus UI's "Graph" tab 
-        * supported types
-          * scalar
-          * instant vector
-    * 👀functional ==👀
-      * compose functions
-      * input data do NOT change
-      * pure functions
-        * == SAME inputs -> SAME output
-      * declarative expressions
-        * != define required steps -- to -- calculate
+    * 👀[types -- based on -- execution time](#expression-queries)👀
     * 💡`{__name__=~".+"}`💡
       * 's return
         * ALL supported metrics
@@ -39,55 +28,68 @@ sort_rank: 1
 
 ## Expression language data types
 
-* Prometheus's expression language's expression OR sub-expression
+* Prometheus's language's expression OR sub-expression
   * 's result's ALLOWED types
     * **Instant vector**
-      * == time series / 
-        * has 1! sample / EACH time series
+      * == time serieS / 
+        * 👀1! sample / EACH time series👀
         * ALL share the SAME timestamp
           * -> NOT displayed | Prometheus UI
       ```
-      metric_name{labels} value
+      metric_name{labels} floatValue
+      
+      # if native histograms ingested | TSDB
+      metric_name{labels} histogramOrFloatValue
       ```
     * **Range vector**
-      * == time series /
+      * == time serieS /
         * has a range of data points | time / EACH time series
       ```
-      metric_name{labels} value @timestamp
+      metric_name{labels} floatValue @timestamp
+      
+      # if native histograms ingested | TSDB
+      metric_name{labels} histogramOrFloatValue @timestamp
       ```
     * **Scalar**
       * == simple numeric floating point value
       ```
-      {labels} value
+      {labels} floatValue
       ```
     * **String**
       * == simple string value
         * ⚠️CURRENTLY unused⚠️
+          * Reason: 🧠's CURRENT design ONLY time series🧠
 
-_Notes about the experimental native histograms:_
+* see [native histograms](https://github.com/dancer1325/prometheus-website/blob/main/docs/specs/native_histograms.md)
 
-* Ingesting native histograms has to be enabled via a [feature
-  flag](../feature_flags.md#native-histograms).
-* Once native histograms have been ingested into the TSDB (and even after
-  disabling the feature flag again), both instant vectors and range vectors may
-  now contain samples that aren't simple floating point numbers (float samples)
-  but complete histograms (histogram samples). A vector may contain a mix of
-  float samples and histogram samples. Note that the term “histogram sample” in
-  the PromQL documentation always refers to a native histogram. Classic
-  histograms are broken up into a number of series of float samples. From the
-  perspective of PromQL, there are no “classic histogram samples”.
-* Like float samples, histogram samples can have a counter or a gauge “flavor”,
-  marking them as counter histograms or gauge histograms, respectively. In
-  contrast to float samples, histogram samples “know” their flavor, allowing
-  reliable warnings about mismatched operations (e.g. applying the `rate`
-  function to a range vector of gauge histograms).
-* Native histograms can have different bucket layouts, but they are generally
-  convertible to compatible versions to apply binary and aggregation operations
-  to them. This is not true for all bucketing schemas. If incompatible
-  histograms are encountered in an operation, the corresponding output vector
-  element is removed from the result, flagged with a warn-level annotation.
-  More details can be found in the [native histogram
-  specification](https://prometheus.io/docs/specs/native_histograms/#compatibility-between-histograms).
+## Expression queries
+### Instant query
+* == Prometheus UI's "Table" tab
+* 👀evaluated | SOME point in time👀
+* ALLOWED results
+  * instant vector
+  * scalar
+  * string
+* ❌NOT ALLOWED results❌
+  * range vector
+    * Reason:🧠| evaluate | specific time, IMPOSSIBLE to get range vector🧠
+
+* | [API level](api.md#instant-queries)
+
+### Range query
+* == instant query / run MULTIPLE times | 
+  * DIFFERENT timestamps
+  * equally-spaced steps
+* == Prometheus UI's "Graph" tab
+* ALLOWED results
+  * scalar
+  * instant vector
+* ❌NOT ALLOWED results❌
+  * range vector
+    * Reason:🧠| evaluate | specific time, IMPOSSIBLE to get range vector🧠
+  * string 
+
+* | [API level](api.md#range-queries)
 
 ## Literals
 
