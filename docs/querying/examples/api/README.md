@@ -1,13 +1,16 @@
-* goal
+* `docker run --name prometheus -d -p 127.0.0.1:9090:9090 prom/prometheus`
 
+# `/api/v1`
 * | browser,
   * http://localhost:9090/api/v1
     * NOT exist page
       * Reason:🧠ONLY the Prometheus server's host🧠
-
 * hit [sample.http](sample.http)
 
 # Format overview
+## API's response
+* hit [sampleFormatOverview.http](sampleFormatOverview.http)
+## (query parameters & request body)'s generic placeholders
 * hit [sampleFormatOverview.http](sampleFormatOverview.http)
 
 # Expression queries

@@ -45,7 +45,11 @@ GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=count(up)&limit=3
 ### 2.1.1 if you do NOT pass ?query     -> error
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?start=2023-01-01T00:00:00Z&end=2023-01-01T01:00:00Z&step=15s
 ### 2.1.2 pass ?query     -> fine
-GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?query=up&start=2025-09-15T00:00:00Z&end=2025-09-15T14:50:00Z&step=15s
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?
+    query=up&
+    start=2025-10-03T00:00:00Z&
+    end=2025-10-04T14:50:00Z&
+    step=15s
 
 ##  2.2 ?start       MANDATORY
 ### 2.2.1 if you do NOT pass ?start     -> error

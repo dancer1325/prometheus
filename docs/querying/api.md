@@ -5,7 +5,7 @@ sort_rank: 7
 
 * `/api/v1`
   * Prometheus server's CURRENT 👀HOST 👀HTTP API
-    * any NON-breaking additions will be added | this host
+    * NON-breaking additions -> added | this host
     * 👀ALLOWED HTTP methods👀
       * GET
         * recommended ones
@@ -27,23 +27,21 @@ sort_rank: 7
         "status": "success" | "error",
         "data": <data>,
       
-        // Only set if status is "error". The data field may still hold
-        // additional data.
+        // OPTIONAL
+        //    if status == "error"
         "errorType": "<string>",
         "error": "<string>",
       
         // OPTIONAL
-        // if there were warnings | execute the request -> appear
+        //    if there were warnings | execute the request
         // NOT interrupt request execution
         "warnings": ["<string>"],
         
         // OPTIONAL
-        // if there were info-level annotations | execute the request -> appear
+        //    if there were info-level annotations | execute the request
         "infos": ["<string>"]
       }
       ```
-  * 's format
-    * JSON
   * 's status code -- `status` --
     * if 
       * succeed ->  == `2xx`
@@ -53,21 +51,22 @@ sort_rank: 7
           * [RFC4918](https://tools.ietf.org/html/rfc4918#page-78) 
         * queries time out OR abort -> `503 Service Unavailable`
 
-* generic placeholders
-  * `<rfc3339 | unix_timestamp>`
-    * use cases
-      * input timestamps ALLOWED formats
-        * [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) format 
-        * Unix timestamp | seconds + OPTIONAL decimal places | sub-second precision
-      * output timestamps ALLOWED formats
-        * Unix timestamps | seconds
-  * `<series_selector>`
-    * == Prometheus [time series selectors](basics.md#time-series-selectors) / 
-      * special characters are URL-encoded
-      * _Example:_ `GET /api/v1/query?query=<series_selector>` 
-  * `<duration>`
-    * [Prometheus float literals / use time units](basics.md#float-literals-and-time-durations)
-  * `<bool>`
+* query parameters & request body(== | POST) 
+  * 's generic placeholders
+    * `<rfc3339 | unix_timestamp>`
+      * use cases
+        * input timestamps ALLOWED formats
+          * [RFC3339](https://www.ietf.org/rfc/rfc3339.txt) format 
+          * Unix timestamp | seconds + OPTIONAL decimal places | sub-second precision
+        * output timestamps ALLOWED formats
+          * Unix timestamps | seconds
+    * `<series_selector>`
+      * == Prometheus [time series selectors](basics.md#time-series-selectors) / 
+        * special characters are URL-encoded
+        * _Example:_ `GET /api/v1/query?query=<series_selector>` 
+    * `<duration>`
+      * [Prometheus float literals / use time units](basics.md#float-literals-and-time-durations)
+    * `<bool>`
 
 * query parameters
   * 👀if you want to repeat it -> `queryParameter[]`👀

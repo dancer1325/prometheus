@@ -1,0 +1,16 @@
+### 1. Literals
+### 1.1 string Literals
+### 1.1.1 ""
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=%22Hello%20%5Cn%20world%22
+### 1.1.2 ''
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=%27Hello%20%5Cn%20world%27
+### 1.1.3 ``
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=%60Hello%20%5Cn%20world%60
+
+### 2. time durations
+### use as API parameters
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?
+    query=up&
+    start=2025-10-03T00:00:00Z&
+    end=2025-10-04T14:50:00Z&
+    step=15s

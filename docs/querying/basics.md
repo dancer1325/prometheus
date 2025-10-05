@@ -23,10 +23,11 @@ sort_rank: 1
     * 💡`{__name__=~".+"}`💡
       * 's return
         * ALL supported metrics
+  * ['s supported expressionS](#promqls-supported-expressions)
   * ALTERNATIVE
     * [HTTP API](api.md)
 
-## Expression language data types
+## Expression language returned data types
 
 * Prometheus's language's expression OR sub-expression
   * 's result's ALLOWED types
@@ -91,28 +92,39 @@ sort_rank: 1
 
 * | [API level](api.md#range-queries)
 
-## Literals
+## PromQL's supported expressions
 
-### String literals
+### Literals
 
-String literals are designated by single quotes, double quotes or backticks.
+#### String literals
 
-PromQL follows the same [escaping rules as
-Go](https://golang.org/ref/spec#String_literals). For string literals in single or double quotes, a
-backslash begins an escape sequence, which may be followed by `a`, `b`, `f`,
-`n`, `r`, `t`, `v` or `\`.  Specific characters can be provided using octal
-(`\nnn`) or hexadecimal (`\xnn`, `\unnnn` and `\Unnnnnnnn`) notations.
+* String literals
+  * syntax
+    * 'stringValue'
+    * "stringValue"
+    * `stringValue`
+  * 's escaping rules 
+    * == [Go's escaping rules](https://golang.org/ref/spec#String_literals)
+    * ALLOWED
+      * |
+        * ''
+          * '\allowedEscapingRule'
+        * ""
+          * "\allowedEscapingRule"
+      * escaping rules
+        * `a`, `b`, `f`, `n`, `r`, `t`, `v` or `\`
+        * notations
+          * characters one (== BEFORE)
+          * octal (`\nnn`)
+          * hexadecimal (`\xnn`, `\unnnn` and `\Unnnnnnnn`)
+    * -- via --
+      * Prometheus UI
+        * NOT return escaping
+          * Reason:🧠ignore it🧠
+      * API
 
-Conversely, escape characters are not parsed in string literals designated by backticks. It is important to note that, unlike Go, Prometheus does not discard newlines inside backticks.
-
-Example:
-
-    "this is a string"
-    'these are unescaped: \n \\ \t'
-    `these are not unescaped: \n ' " \t`
-
-### Float literals and time durations
-
+#### Float literals and time durations
+##### float literals 
 * ways to write scalar float values
   * literal integer OR
   * literal floating-point numbers
@@ -128,17 +140,22 @@ Example:
 
 * | decimal OR hexadecimal digits,
   * recommendations
-    * use underscores (`_`)
+    * if number is big -> use underscores (`_`)
       * Reason:🧠improve readability🧠
 
-* durations
-  * uses
-    * `integerNumber` + `durationTimeUnit`
-      * if you
-        * do NOT specify `durationTimeUnit` -> `s`
-        * specify NOT integers -> NOT valid❌
-      * 💡they can be concatenated💡/
-        * order units: longest -- to -- shortest
+* uses
+  * math operations
+  * compare & filter
+
+##### time durations
+* `integerNumber` + `durationTimeUnit`
+  * 👀syntax👀
+  * if you
+    * do NOT specify `durationTimeUnit` -> `s`
+    * specify NOT integers -> NOT valid❌
+  * 💡they can be concatenated💡/
+    * order units: longest -- to -- shortest
+      * ❌OTHERWISE, NOT valid❌
   * ALLOWED time units
     * `ms`
     * `s`
@@ -151,113 +168,60 @@ Example:
     * `y`
       * == years
 
-## Time series selectors
+* uses
+  * range vectors
+  * API parameters
+  * offset modifiers
 
-* == basic building-blocks /
-  * uses
-    * what data / PromQL must fetch
+### Time series selectors
 
-### Instant vector selectors
+* uses
+  * data / PromQL must fetch
 
-Instant vector selectors allow the selection of a set of time series and a
-single sample value for each at a given timestamp (point in time).  In the simplest
-form, only a metric name is specified, which results in an instant vector
-containing elements for all time series that have this metric name.
+#### Instant vector selectors
 
-The value returned will be that of the most recent sample at or before the
-query's evaluation timestamp (in the case of an
-[instant query](api.md#instant-queries))
-or the current step within the query (in the case of a
-[range query](api.md#range-queries)).
-The [`@` modifier](#modifier) allows overriding the timestamp relative to which
-the selection takes place. Time series are only returned if their most recent sample is less than the [lookback period](#staleness) ago.
+* allow
+  * selecting a set of time serieS / 1! sample value / EACH time series | given timestamp
+    * given
+      * 👀by default, CURRENT👀
+    * if you want to override the timestamp | select -> use [`@` modifier](#-modifier)
+    * if time series' recent sample < time series' sample [lookback period](#staleness) ago -> time series returned
 
-This example selects all time series that have the `http_requests_total` metric
-name, returning the most recent sample for each:
+* ways
+  * `metricName`
+    * == `{__name__=metricName}`
+    * keywords / NOT ALLOWED
+      * `bool`
+      * `on`
+        * workaround -- `{__name__="on"}` -- 
+      * `ignoring`
+      * `group_left`
+      * `group_right` 
+  * `metricName{label1="value1",label2="value2",...}`
+    * ways to match label vs value
+      * operators
+        * `=`
+          * EXACTLY equal
+        * `!=`
+          * NOT equal
+        * `=~`
+          * 💡regex-match💡
+          * -- based on -- [RE2 syntax](https://github.com/google/re2/wiki/Syntax)
+          * FULLY anchored
+            * | 
+              * beginning, `^`
+              * end, `$`
+            * _Example:_ `env=~"foo"` -> `env=~"^foo$"` 
+        * `!~`
+          * NOT regex-match
+      * if `label1=""` (== empty label value) -> select ALL time series / NOT have the specific label set
+      * MULTIPLE matchers | SAME label name
+        * ALL must match
+  * requirements
+    * specify `metricName` OR ( label matcher / NOT EMPTY string value)
+      * Reason:🧠OTHERWISE, returns ALL metrics🧠
 
-    http_requests_total
-
-It is possible to filter these time series further by appending a comma-separated list of label
-matchers in curly braces (`{}`).
-
-This example selects only those time series with the `http_requests_total`
-metric name that also have the `job` label set to `prometheus` and their
-`group` label set to `canary`:
-
-    http_requests_total{job="prometheus",group="canary"}
-
-It is also possible to negatively match a label value, or to match label values
-against regular expressions. The following label matching operators exist:
-
-* `=`: Select labels that are exactly equal to the provided string.
-* `!=`: Select labels that are not equal to the provided string.
-* `=~`: Select labels that regex-match the provided string.
-* `!~`: Select labels that do not regex-match the provided string.
-
-[Regex](#regular-expressions) matches are fully anchored. A match of `env=~"foo"` is treated as `env=~"^foo$"`.
-
-For example, this selects all `http_requests_total` time series for `staging`,
-`testing`, and `development` environments and HTTP methods other than `GET`.
-
-    http_requests_total{environment=~"staging|testing|development",method!="GET"}
-
-Label matchers that match empty label values also select all time series that
-do not have the specific label set at all. It is possible to have multiple matchers for the same label name.
-
-For example, given the dataset:
-
-    http_requests_total
-    http_requests_total{replica="rep-a"}
-    http_requests_total{replica="rep-b"}
-    http_requests_total{environment="development"}
-
-The query `http_requests_total{environment=""}` would match and return:
-
-    http_requests_total
-    http_requests_total{replica="rep-a"}
-    http_requests_total{replica="rep-b"}
-
-and would exclude:
-
-    http_requests_total{environment="development"}
-
-Multiple matchers can be used for the same label name; they all must pass for a result to be returned.
-
-The query:
-
-    http_requests_total{replica!="rep-a",replica=~"rep.*"}
-
-Would then match:
-
-    http_requests_total{replica="rep-b"}
-
-Vector selectors must either specify a name or at least one label matcher
-that does not match the empty string. The following expression is illegal:
-
-    {job=~".*"} # Bad!
-
-In contrast, these expressions are valid as they both have a selector that does not
-match empty label values.
-
-    {job=~".+"}              # Good!
-    {job=~".*",method="get"} # Good!
-
-Label matchers can also be applied to metric names by matching against the internal
-`__name__` label. For example, the expression `http_requests_total` is equivalent to
-`{__name__="http_requests_total"}`. Matchers other than `=` (`!=`, `=~`, `!~`) may also be used.
-The following expression selects all metrics that have a name starting with `job:`:
-
-    {__name__=~"job:.*"}
-
-The metric name must not be one of the keywords `bool`, `on`, `ignoring`, `group_left` and `group_right`. The following expression is illegal:
-
-    on{} # Bad!
-
-A workaround for this restriction is to use the `__name__` label:
-
-    {__name__="on"} # Good!
-
-### Range Vector Selectors
+#### Range Vector Selectors
 
 Range vector literals work like instant vector literals, except that they
 select a range of samples back from the current instant. Syntactically, a
@@ -276,7 +240,7 @@ set to `prometheus`:
 
     http_requests_total{job="prometheus"}[5m]
 
-### Offset modifier
+#### Offset modifier
 
 The `offset` modifier allows changing the time offset for individual
 instant and range vectors in a query.
@@ -307,7 +271,7 @@ When querying for samples in the past, a negative offset will enable temporal co
 
 Note that this allows a query to look ahead of its evaluation time.
 
-### @ modifier
+#### @ modifier
 
 The `@` modifier allows changing the evaluation time for individual instant
 and range vectors in a query. The time supplied to the `@` modifier
@@ -354,7 +318,7 @@ For an instant query, `start()` and `end()` both resolve to the evaluation time.
 
 Note that the `@` modifier allows a query to look ahead of its evaluation time.
 
-## Subquery
+### Subquery
 
 Subquery allows you to run an instant query for a given range and resolution. The result of a subquery is a range vector.
 
@@ -362,27 +326,19 @@ Syntax: `<instant_query> '[' <range> ':' [<resolution>] ']' [ @ <float_literal> 
 
 * `<resolution>` is optional. Default is the global evaluation interval.
 
-## Operators
+### Operators
 
-Prometheus supports many binary and aggregation operators. These are described
-in detail in the [expression language operators](operators.md) page.
+* [expression language operators](operators.md)
 
-## Functions
+### Functions
 
-Prometheus supports several functions to operate on data. These are described
-in detail in the [expression language functions](functions.md) page.
+* [expression language functions](functions.md)
 
-## Comments
+### Comments
 
 PromQL supports line comments that start with `#`. Example:
 
         # This is a comment
-
-## Regular expressions
-
-All regular expressions in Prometheus use [RE2 syntax](https://github.com/google/re2/wiki/Syntax).
-
-Regex matches are always fully anchored.
 
 ## Gotchas
 

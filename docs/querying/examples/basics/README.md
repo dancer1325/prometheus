@@ -90,49 +90,193 @@
   * http://localhost:9090/query, | table
     * `"hello world"`
 
-# Literals
+# PromQL's supported expressions
+## Literals
+### string literals
+#### escaping rules
+##### ignored | Prometheus UI
+* | browser,
+  * http://localhost:9090/query
+    * 'Hello \n world'
+      * NO
+    * "Hello \n world"
+    * `Hello \n world`
+##### API
+* hit [sample.http](sample.http)
 
-## string literals
-
-## Float literals and time durations
-* _Examples to write scalar float values:_ 
-  ```text
-  23
-  -2.43
-  3.4e-9
-  0x8f
-  -Inf
-  NaN
-  ```
-
-* _Examples to write decimal OR hexadecimal digits:_
+### float literals and time durations
+#### float literals
+* | browser,
+  * http://localhost:9090/query
+ 
+      ```text
+      // literal integer
+      23     
+      
+      // literal floating-point number  
+      -2.43
+      3.4e-9
+      0x8f
+      -Inf
+      NaN
+    
+      // decimal
+      .123_456_789  
+    
+      // hexadecimal
+      0x_53_AB_F3_82  
+    
+      // if number is big -> use underscores (`_`)
+      1_000_000 
+    
+      // uses
+      // math operations
+      go_gc_gogc_percent * 100
+      // compare & filters
+      prometheus_http_requests_total > 1000      
+      ```
+#### time durations
+* | browser,
+  * http://localhost:9090/query
 
     ```text
-    1_000_000
-    .123_456_789
-    0x_53_AB_F3_82
-    ```
-* _Examples of durations:_
-
-    ```text
+    // `integerNumber` + `durationTimeUnit`
     1s # == 1
-    2m # == 120
+    
+    // ALLOWED time units
+    2m # == 120 == 120 s
     1ms # == 0.001
     -2h # == -7200
     
+    // if you do NOT specify durationTimeUnit   -> s
+    2   # 2
     
-    # NOT valid, because you specify NOT integer numbers
-    0xABm   # No suffixing of hexadecimal numbers.
+    # if you do NOT specify integer numbers -> NOT valid 
+    0xABm   # No suffixing of hexadecimal numbers
     1.5h    # Time units cannot be combined with a floating point.
     +Infd   # No suffixing of ±Inf or NaN.
-  
   
     # concatenated
     1h30m           # == 5400s == 5400
     12h34m56s       # == 45296s == 45296
     54s321ms        # == 54.321
+    30m1h           # WRONGLY concatenated -> NOT valid
+    
+    # uses
+    # 1. range vectors
+    rate(prometheus_http_requests_total[5m])
+    # 3. offset modifiers
+    prometheus_http_requests_total offset 1h
     ```
+## Time series selectors
+### Instant vector selectors
+#### `metricName`
+##### == `{__name__=metricName}`
+* | browser,
+  * http://localhost:9090/query
+    * `prometheus_http_requests_total`
+    * `{__name__="prometheus_http_requests_total"}`
+##### keywords / NOT ALLOWED
+* | browser,
+  * http://localhost:9090/query
+    * `bool`
+    * `on`
+    * `ignoring`
+    * `group_left`
+    * `group_right`
+#### selecting a set of time serieS / 1! sample value / EACH time series | given timestamp
+* | browser,
+  * http://localhost:9090/query
+    * `prometheus_http_requests_total`
+      * by default, CURRENT
+      * adjust timestamp
+#### `metricname{label1=value1,label2=value,...}`
+* | browser,
+  * http://localhost:9090/query
+    * `prometheus_http_requests_total{handler="/-/healthy"}`
+#### ways to match label vs value
+##### operators
+###### `=`
+* `prometheus_http_requests_total{handler="/-/healthy"}`
+* ❌NOT valid❌
+  * `prometheus_http_requests_total{code="400|404|302"}`
+    * Reason:🧠regular expression🧠
+###### `!=`
+* `prometheus_http_requests_total{handler!="/-/healthy"}`
+###### `=~`
+* `prometheus_http_requests_total{code=~"200|400|404|302"}`
+* `prometheus_http_requests_total{code=~"400|404|302"}`
+* `prometheus_http_requests_total{code=~"404|302"}`
+###### !~
+* `prometheus_http_requests_total{code!~"200|400"}`
+##### EMPTY label value
+* `prometheus_http_requests_total{version=""}`
+  * `version` label does NOT exist -> return ALL
+##### MULTIPLE matchers | SAME label name
+* `prometheus_http_requests_total{code!="200",code!="400"}`
+  * == `prometheus_http_requests_total{code!~"200|400"}`
+#### specify `metricName` OR ( label matcher / NOT EMPTY string value)
+* `{job=""}`
+  * ERROR
+* `{job=~".*"}`
+  * ERROR
+    * Reason:🧠
+      * `.` == ANY character
+      * `*` >= 0 strings🧠
+* `{job=~".+"}`
+  * FINE
+    * Reason:🧠`+` >= 1 strings🧠
 
+### Range Vector Selectors
+### Offset modifier
+### @ modifier
 
-* TODO:
+# Regular expression
+## FULLY anchored
+* `prometheus_http_requests_total{handler=~"/api/v1/admin/tsdb/clean_tombstones"}`
+  * == 
+    * `prometheus_http_requests_total{handler=~"^/api/v1/admin/tsdb/clean_tombstones"}`
+    * `prometheus_http_requests_total{handler=~"/api/v1/admin/tsdb/clean_tombstones$"}`
+    * `prometheus_http_requests_total{handler=~"^/api/v1/admin/tsdb/clean_tombstones$"}`
+## if you alternate OR concatenate 2 regular expressions -> new regular expression
+### alternate -- `e1 | e2` --
+* `prometheus_http_requests_total{code=~"400|302"}`
+### concatenate -- `e1e2` --
+* `prometheus_http_requests_total{handler="/api/v1/query_range"}`
+  * `/api/v1/` + `query_range`
+## metacharacters
+### `.`
+* `prometheus_http_requests_total{handler=~"/-/heal.hy"}`
+  * match with the existing `prometheus_http_requests_total{handler=~"/-/healthy"}`
+#### BUT ONLY 1!
+* `prometheus_http_requests_total{handler=~"/."}`
+  * Reason: `prometheus_http_requests_total{handler=~"/"}` exist, BUT NOTHING else with 2 characters
+### `|`
+* `prometheus_http_requests_total{code=~"400|302"}`
+### `()`
+* `prometheus_http_requests_total{handler=~"/api/v1/(alertmanagers|alerts)"}`
+### `[]`
+* `prometheus_http_requests_total{code=~"[345]00"}`
+* `prometheus_http_requests_total{code=~"[3-5]00"}`
+### repetition operators
+#### `*`
+* `prometheus_http_requests_total{handler=~"/api/v1/admin/.*"}`
+  * `.*`
+    * ANY character / >= 0 repetitions
+* `prometheus_http_requests_total{handler=~"/alertss*"}`
+  * `s*`
+    * 0 repetitions ALSO
+#### `+`
+* `prometheus_http_requests_total{handler=~"/alertss+"}`
+  * NOT returned data
+    * Reason:🧠required at least `/alertss` 🧠
+#### `?`
+* `prometheus_http_requests_total{handler=~"/alertss?"}`
+  * `ss?`
+    * 0 OR 1 repetition of s == `s` OR `ss`
+#### `{}`
+* `prometheus_http_requests_total{code=~"[345]0{2}"}`
+### if you want to match -> escape them
+
+# TODO:
 
