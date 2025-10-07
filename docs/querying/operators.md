@@ -250,7 +250,7 @@ sort_rank: 2
         * `(<label list>)`
           * == unquoted labelS / may include a trailing comma
 
-### `sum`
+### `sum(v)`
 * `sum(v)`
   * sums up `v`'s sample values
     * == `+` binary operator
@@ -261,7 +261,7 @@ sort_rank: 2
   * 's return
     * 1! vector
 
-### `avg`
+### `avg(v)`
 
 * `avg(v)`
   * == `sum(v) / numberOfAggregatedSamples`
@@ -270,7 +270,7 @@ sort_rank: 2
         * float samples OR
         * histogram samples
 
-### `min` & `max`
+### `min(v)` & `max(v)`
 
 * uses
   * ⚠️ONLY | float samples⚠️
