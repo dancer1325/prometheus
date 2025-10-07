@@ -223,108 +223,71 @@ sort_rank: 1
 
 #### Range Vector Selectors
 
-Range vector literals work like instant vector literals, except that they
-select a range of samples back from the current instant. Syntactically, a
-[float literal](#float-literals-and-time-durations) is appended in square
-brackets (`[]`) at the end of a vector selector to specify for how many seconds
-back in time values should be fetched for each resulting range vector element.
-Commonly, the float literal uses the syntax with one or more time units, e.g.
-`[5m]`. The range is a left-open and right-closed interval, i.e. samples with
-timestamps coinciding with the left boundary of the range are excluded from the
-selection, while samples coinciding with the right boundary of the range are
-included in the selection.
-
-In this example, we select all the values recorded less than 5m ago for all
-time series that have the metric name `http_requests_total` and a `job` label
-set to `prometheus`:
-
-    http_requests_total{job="prometheus"}[5m]
+* Range vector selectors
+  * 's work vs like instant vector selectors' work
+    * SAME
+      * EXCEPT, range of samples 👀(currentInstant - timeSpecified, currentInstant] 👀
+        * LEFT is excluded
+  * ways
+    * `metricName[floatLiteral]`
+    * `metricName{label1="value1",label2="value2",...}[floatLiteral]`
 
 #### Offset modifier
 
-The `offset` modifier allows changing the time offset for individual
-instant and range vectors in a query.
-
-For example, the following expression returns the value of
-`http_requests_total` 5 minutes in the past relative to the current
-query evaluation time:
-
-    http_requests_total offset 5m
-
-Note that the `offset` modifier always needs to follow the selector
-immediately, i.e. the following would be correct:
-
-    sum(http_requests_total{method="GET"} offset 5m) // GOOD.
-
-While the following would be *incorrect*:
-
-    sum(http_requests_total{method="GET"}) offset 5m // INVALID.
-
-The same works for range vectors. This returns the 5-minute [rate](./functions.md#rate)
-that `http_requests_total` had a week ago:
-
-    rate(http_requests_total[5m] offset 1w)
-
-When querying for samples in the past, a negative offset will enable temporal comparisons forward in time:
-
-    rate(http_requests_total[5m] offset -1w)
-
-Note that this allows a query to look ahead of its evaluation time.
+* `offset` modifier
+  * syntax
+    * `instantVectorSelector offset floatLiteralDuration`
+      * ❌️NOT valid❌
+        * Reason:🧠| instant queries, ALWAYS return CURRENT or GIVEN timestamp🧠
+    * `rangeVectorSelector offset floatLiteralDuration`
+      * ❌if `offset` NOT IMMEDIATELY AFTER selector -> NOT valid❌
+  * allows
+    * changing the time offset (👀past or future👀) | range vectors
+  * uses
+    * ⚠️ONLY | range queries⚠️
 
 #### @ modifier
 
-The `@` modifier allows changing the evaluation time for individual instant
-and range vectors in a query. The time supplied to the `@` modifier
-is a Unix timestamp and described with a float literal.
+* `@` modifier
+  * syntax
+    * `instantVectorSelector @ timestampAsFloatLiteral`
+      * ❌️NOT valid❌
+        * Reason:🧠| instant queries, ALWAYS return CURRENT or GIVEN timestamp🧠
+    * `rangeVectorSelector @ timestampAsFloatLiteral`
+      * ❌if `@` NOT IMMEDIATELY AFTER selector -> NOT valid❌
+  * allows
+    * changing the evaluation time | range vectors
+  * uses
+    * ⚠️ONLY | range queries⚠️
 
-For example, the following expression returns the value of
-`http_requests_total` at `2021-01-04T07:40:00+00:00`:
+#### @ modifier + offset modifier OR offset modifier + @ modifier 
+* `...` + (`offset timeDuration @ timeStamp` OR `@ timeStamp offset timeDuration`)
+  * `offset` modifier is applied -- relative to the -- `@`modifier
+  * uses 
+    * ⚠️ONLY | range queries⚠️
+      * ❌NOT valid | instant selectors❌
 
-    http_requests_total @ 1609746000
+#### `@ start()` & `@ end()`
 
-Note that the `@` modifier always needs to follow the selector
-immediately, i.e. the following would be correct:
-
-    sum(http_requests_total{method="GET"} @ 1609746000) // GOOD.
-
-While the following would be *incorrect*:
-
-    sum(http_requests_total{method="GET"}) @ 1609746000 // INVALID.
-
-The same works for range vectors. This returns the 5-minute rate that
-`http_requests_total` had at `2021-01-04T07:40:00+00:00`:
-
-    rate(http_requests_total[5m] @ 1609746000)
-
-The `@` modifier supports all representations of numeric literals described above.
-It works with the `offset` modifier where the offset is applied relative to the `@`
-modifier time.  The results are the same irrespective of the order of the modifiers.
-
-For example, these two queries will produce the same result:
-
-    # offset after @
-    http_requests_total @ 1609746000 offset 5m
-    # offset before @
-    http_requests_total offset 5m @ 1609746000
-
-Additionally, `start()` and `end()` can also be used as values for the `@` modifier as special values.
-
-For a range query, they resolve to the start and end of the range query respectively and remain the same for all steps.
-
-For an instant query, `start()` and `end()` both resolve to the evaluation time.
-
-    http_requests_total @ start()
-    rate(http_requests_total[5m] @ end())
-
-Note that the `@` modifier allows a query to look ahead of its evaluation time.
+* allows
+  * getting range query's start & end
+* uses
+  * range query
 
 ### Subquery
 
-Subquery allows you to run an instant query for a given range and resolution. The result of a subquery is a range vector.
-
-Syntax: `<instant_query> '[' <range> ':' [<resolution>] ']' [ @ <float_literal> ] [ offset <float_literal> ]`
-
-* `<resolution>` is optional. Default is the global evaluation interval.
+* Subquery
+  * `<instant_query> '[' <range> ':' [<resolution>] ']' [ @ <float_literal> ] [ offset <float_literal> ]`
+    * syntax
+    * `<range>`
+      * time durations
+    * `<resolution>`
+      * time durations
+      * OPTIONAL
+      * by default, `global.evaluation_interval`
+  * allows
+    * 👀run an instant query / given range & resolution👀
+      * == 💡returns a range vector💡 
 
 ### Operators
 
@@ -336,9 +299,10 @@ Syntax: `<instant_query> '[' <range> ':' [<resolution>] ']' [ @ <float_literal> 
 
 ### Comments
 
-PromQL supports line comments that start with `#`. Example:
-
-        # This is a comment
+```
+# add a commentary
+someQuery
+```
 
 ## Gotchas
 

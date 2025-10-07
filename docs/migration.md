@@ -10,38 +10,38 @@ This document offers guidance on migrating from Prometheus 2.x to Prometheus 3.0
 
 ## Flags
 
-- The following feature flags have been removed and they have been added to the
-  default behavior of Prometheus v3:
-  - `promql-at-modifier`
-  - `promql-negative-offset`
-  - `new-service-discovery-manager`
-  - `expand-external-labels`
-      - Environment variable references `${var}` or `$var` in external label values
-    are replaced according to the values of the current environment variables.
-      - References to undefined variables are replaced by the empty string.
-    The `$` character can be escaped by using `$$`.
-  - `no-default-scrape-port`
-      - Prometheus v3 will no longer add ports to scrape targets according to the
-    specified scheme. Target will now appear in labels as configured.
-      - If you rely on scrape targets like
-      `https://example.com/metrics` or `http://example.com/metrics` to be
-      represented as `https://example.com/metrics:443` and
-      `http://example.com/metrics:80` respectively, add them to your target URLs
-  - `agent`
-    - use the dedicated `--agent` CLI flag
-  - `remote-write-receiver`
-      - Instead use the dedicated `--web.enable-remote-write-receiver` CLI flag to enable the remote write receiver.
-  - `auto-gomemlimit`
-      - Prometheus v3 will automatically set `GOMEMLIMIT` to match the Linux
-      container memory limit. If there is no container limit, or the process is
-      running outside of containers, the system memory total is used. To disable
-      this, `--no-auto-gomemlimit` is available.
-  - `auto-gomaxprocs`
-      - Prometheus v3 will automatically set `GOMAXPROCS` to match the Linux
-      container CPU quota. To disable this, `--no-auto-gomaxprocs` is available.
+- feature flags / have been removed
+  - == | Prometheus v3, default behavior 
+    - `promql-at-modifier`
+    - `promql-negative-offset`
+    - `new-service-discovery-manager`
+    - `expand-external-labels`
+        - Environment variable references `${var}` or `$var` in external label values
+      are replaced according to the values of the current environment variables.
+        - References to undefined variables are replaced by the empty string.
+      The `$` character can be escaped by using `$$`.
+    - `no-default-scrape-port`
+        - Prometheus v3 will no longer add ports to scrape targets according to the
+      specified scheme. Target will now appear in labels as configured.
+        - If you rely on scrape targets like
+        `https://example.com/metrics` or `http://example.com/metrics` to be
+        represented as `https://example.com/metrics:443` and
+        `http://example.com/metrics:80` respectively, add them to your target URLs
+    - `agent`
+      - use the dedicated `--agent` CLI flag
+    - `remote-write-receiver`
+        - Instead use the dedicated `--web.enable-remote-write-receiver` CLI flag to enable the remote write receiver.
+    - `auto-gomemlimit`
+        - Prometheus v3 will automatically set `GOMEMLIMIT` to match the Linux
+        container memory limit. If there is no container limit, or the process is
+        running outside of containers, the system memory total is used. To disable
+        this, `--no-auto-gomemlimit` is available.
+    - `auto-gomaxprocs`
+        - Prometheus v3 will automatically set `GOMAXPROCS` to match the Linux
+        container CPU quota. To disable this, `--no-auto-gomaxprocs` is available.
 
-  Prometheus v3 will log a warning if you continue to pass these to
-  `--enable-feature`.
+    Prometheus v3 will log a warning if you continue to pass these to
+    `--enable-feature`.
 
 ## Configuration
 

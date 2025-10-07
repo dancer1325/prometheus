@@ -4,16 +4,11 @@ nav_title: Functions
 sort_rank: 3
 ---
 
-Some functions have default arguments, e.g. `year(v=vector(time())
-instant-vector)`. This means that there is one argument `v` which is an instant
-vector, which if not provided it will default to the value of the expression
-`vector(time())`.
+## `abs(v instant-vector)`
 
-## `abs()`
-
-`abs(v instant-vector)` returns a vector containing all float samples in the
-input vector converted to their absolute value. Histogram samples in the input
-vector are ignored silently.
+* 's return
+  * vector / `v`'s ALL float samples are converted -- to -- their absolute value
+    * input vector's histogram samples are ignored
 
 ## `absent()`
 
@@ -106,10 +101,16 @@ vector are ignored silently.
 
 ## `day_of_month()`
 
-`day_of_month(v=vector(time()) instant-vector)` interpretes float samples in
-`v` as timestamps (number of seconds since January 1, 1970 UTC) and returns the
-day of the month (in UTC) for each of those timestamps. Returned values are
-from 1 to 31. Histogram samples in the input vector are ignored silently.
+* `day_of_month(v=vector(time()) instant-vector)`
+  * 's input
+    * `v=vector(time()) instant-vector`
+      * instant vector / has
+        * default value
+
+    * interpretes float samples in
+    `v` as timestamps (number of seconds since January 1, 1970 UTC) and returns the
+    day of the month (in UTC) for each of those timestamps. Returned values are
+    from 1 to 31. Histogram samples in the input vector are ignored silently.
 
 ## `day_of_week()`
 

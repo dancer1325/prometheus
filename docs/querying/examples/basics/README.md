@@ -226,10 +226,69 @@
 * `{job=~".+"}`
   * FINE
     * Reason:🧠`+` >= 1 strings🧠
-
-### Range Vector Selectors
+### Range vector selectors
+#### `metricName[floatLiteral]`
+* `prometheus_http_requests_total[5m]`
+#### `metricName{label1="value1",label2="value2",...}[floatLiteral]`
+* `prometheus_http_requests_total{code="404"}[5m]`
 ### Offset modifier
+#### ❌| instant vector selector, NOT valid❌
+* `prometheus_http_requests_total offset 20m`
+  * ALWAYS return | CURRENT or GIVEN timestamps
+#### if `offset` NOT IMMEDIATELY AFTER selector -> NOT valid
+* `sum(prometheus_http_requests_total[5m]) offset 20m`
+  * ❌NOT valid❌
+#### past
+* `prometheus_http_requests_total[5m] offset 20m`
+  * `prometheus_http_requests_total[5m]` 20m ago
+#### future
+* http://localhost:9090/query
+  * ⚠️adjust the time | evaluate⚠️
+  * `prometheus_http_requests_total[5m] offset -20m`
+    * `prometheus_http_requests_total[5m]` -20m ago | GIVEN timestamp
 ### @ modifier
+#### ❌`instantVectorSelector @ timestampAsFloatLiteral` NOT valid❌
+* `prometheus_http_requests_total @ 1759662516`
+  * ALWAYS return CURRENT or GIVEN time
+    * -- via -- [API](sample.http)
+    * -- via -- UI
+#### `rangeVectorSelector @ timestampAsFloatLiteral`
+* `prometheus_http_requests_total[5m] @ 1759662516`
+#### ❌if `@` NOT IMMEDIATELY AFTER selector -> NOT valid❌
+* `(prometheus_http_requests_total[5m]) @ 1759662516`
+### @ modifier + offset modifier  OR  offset modifier + @ modifier
+#### `instantVectorSelector @ timestampAsFloatLiteral offset timeDuration`
+* `prometheus_http_requests_total @ 1759662516 offset 5m`
+  * ❌NOT valid❌
+    * ALWAYS return CURRENT or GIVEN time
+#### `instantVectorSelector offset timeDuration @ timestampAsFloatLiteral`
+* `prometheus_http_requests_total offset 5m @ 1759662516`
+  * ❌NOT valid❌
+    * ALWAYS return CURRENT or GIVEN time
+#### `rangeVectorSelector offset timeDuration @ timestampAsFloatLiteral`
+* `prometheus_http_requests_total[5m] offset 5m @ 1759662516`
+#### `rangeVectorSelector @ timestampAsFloatLiteral offset timeDuration `
+* `prometheus_http_requests_total[5m] @ 1759662516 offset 5m`
+### `@ start()` & `@ end()`
+* `rate(prometheus_http_requests_total[5m] @ start())`
+  * Problems:
+    * Problem1: ALWAYS CURRENT or GIVEN timestamp
+      * Solution: TODO:
+* `rate(prometheus_http_requests_total[5m] @ end())`
+  * Problems:
+    * Problem1: ALWAYS CURRENT or GIVEN timestamp
+      * Solution: TODO:
+## Subquery
+* `prometheus_http_requests_total[30m:15m]`
+  * return a range vector / 2 hits
+### <resolution> OPTIONAL
+* `prometheus_http_requests_total[30s]`
+  * returns 2 hits -- Reason: 🧠`evaluation_interval: 15s` 🧠
+## Comments
+```
+#This is a comment
+prometheus_http_requests_total
+```
 
 # Regular expression
 ## FULLY anchored

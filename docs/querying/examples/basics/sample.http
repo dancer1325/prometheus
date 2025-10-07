@@ -14,3 +14,17 @@ GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range?
     start=2025-10-03T00:00:00Z&
     end=2025-10-04T14:50:00Z&
     step=15s
+
+### 3. @ modifier
+### 3.1 NOT valid | instant selectors
+POST {{PROMETHEUS_SERVER_HOST}}/api/v1/query
+Content-Type: application/x-www-form-urlencoded
+
+query=prometheus_http_requests_total @ 1759662516
+
+### 4. offset modifier
+### 4.1 NOT valid | instant selectors
+POST {{PROMETHEUS_SERVER_HOST}}/api/v1/query
+Content-Type: application/x-www-form-urlencoded
+
+query=prometheus_http_requests_total offset 2h
