@@ -6,11 +6,17 @@ sort_rank: 3
 
 ## `abs(v instant-vector)`
 
+* 's input
+  * `v instant-vector`
+    * != scalar
 * 's return
   * vector / `v`'s ALL float samples are converted -- to -- their absolute value
     * input vector's histogram samples are ignored
 
-## `absent()`
+* use case
+  * subtract metrics
+
+## `absent(v instant-vector)`
 
 `absent(v instant-vector)` returns an empty vector if the vector passed to it
 has any elements (float samples or histogram samples) and a 1-element vector
@@ -99,26 +105,33 @@ vector are ignored silently.
 samples in `v` to have a lower limit of `min`. Histogram samples in the input
 vector are ignored silently.
 
-## `day_of_month()`
+## `day_of_month(v=vector(time()) instant-vector)`
 
-* `day_of_month(v=vector(time()) instant-vector)`
-  * 's input
-    * `v=vector(time()) instant-vector`
-      * instant vector / has
-        * default value
 
-    * interpretes float samples in
-    `v` as timestamps (number of seconds since January 1, 1970 UTC) and returns the
-    day of the month (in UTC) for each of those timestamps. Returned values are
-    from 1 to 31. Histogram samples in the input vector are ignored silently.
+* 's input
+  * `v=vector(time()) instant-vector`
+    * instant vector / has
+      * default value
 
-## `day_of_week()`
+  * interpretes float samples in
+  `v` as timestamps (number of seconds since January 1, 1970 UTC) and returns the
+  day of the month (in UTC) for each of those timestamps. Returned values are
+  from 1 to 31. Histogram samples in the input vector are ignored silently.
 
-`day_of_week(v=vector(time()) instant-vector)` interpretes float samples in `v`
-as timestamps (number of seconds since January 1, 1970 UTC) and returns the day
-of the week (in UTC) for each of those timestamps. Returned values are from 0
-to 6, where 0 means Sunday etc. Histogram samples in the input vector are
-ignored silently.
+## `day_of_week(v=vector(time()) instant-vector)`
+
+* 's input
+  * if there are histogram samples -> ignored 
+
+* 's return
+  * `v`'s samples' day of the week | UTC
+  * ALLOWED values
+    * [0, 6]
+      * 0 == Sunday
+      * 6 == Saturday
+
+* uses
+  * temporal filters
 
 ## `day_of_year()`
 
@@ -447,12 +460,19 @@ and do not show up in the returned vector.
 Similarly, `histogram_stdvar(v instant-vector)` returns the estimated standard
 variance of observations for each histogram sample in `v`.
 
-## `hour()`
+## `hour(v=vector(time()) instant-vector)`
 
-`hour(v=vector(time()) instant-vector)` interpretes float samples in `v` as
-timestamps (number of seconds since January 1, 1970 UTC) and returns the hour
-of the day (in UTC) for each of those timestamps. Returned values are from 0
-to 23. Histogram samples in the input vector are ignored silently.
+* 's input
+  * if there are histogram samples -> ignored
+* 's return
+  * `v`'s samples' hour | UTC
+  * ALLOWED values
+    * [0, 23]
+
+* uses
+  * get CURRENT timestamp
+  * timestamp's hour
+  * temporal filters
 
 ## `idelta()`
 
@@ -465,51 +485,48 @@ flagged by a warn-level annotation.
 
 `idelta` should only be used with gauges (for both floats and histograms).
 
-## `increase()`
+## `increase(v range-vector)`
 
-`increase(v range-vector)` calculates the increase in the time series in the
-range vector. Breaks in monotonicity (such as counter resets due to target
-restarts) are automatically adjusted for. The increase is extrapolated to cover
-the full time range as specified in the range vector selector, so that it is
-possible to get a non-integer result even if a counter increases only by
-integer increments.
+* 's return
+  * increase in the time series | range vector
+    * ⚠️if there is a break in monotonicity (_Example:_ counter resets -- due to -- target restarts) -> AUTOMATICALLY adjusted for⚠️
+    * if there are NO scrapes | end of time range -> extrapolates | ends of the time range
+    * == 👀rate(v range-vector) * timeRangeInSeconds👀
 
-The following example expression returns the number of HTTP requests as measured
-over the last 5 minutes, per time series in the range vector:
+* uses | 
+  * counters
+    * BOTH floats & histograms
+      * | histograms samples, calculate a new histogram /
+        * EACH component (`_sum`, `_count`, `_bucket`) == increase | [first native histogram, last native histogram]
+      * if there are `v`'s elements / have float samples + native histograms | range -> omitted | result vector
 
-```
-increase(http_requests_total{job="api-server"}[5m])
-```
+* use cases
+  * dashboards
+    * Reason:🧠human-readable🧠
 
-`increase` acts on histogram samples by calculating a new histogram where each
-component (sum and count of observations, buckets) is the increase between the
-respective component in the first and last native histogram in `v`. However,
-each element in `v` that contains a mix of float samples and histogram samples
-within the range, will be omitted from the result vector, flagged by a
-warn-level annotation.
+## `info(v instant-vector, [data-label-selector instant-vector])`
 
-`increase` should only be used with counters (for both floats and histograms).
-It is syntactic sugar for `rate(v)` multiplied by the number of seconds under
-the specified time range window, and should be used primarily for human
-readability. Use `rate` in recording rules so that increases are tracked
-consistently on a per-second basis.
+* goal
+  * | [info metrics](https://grafana.com/blog/2021/08/04/how-to-use-promql-joins-for-more-effective-queries-of-prometheus-metrics-at-scale/#info-metrics),
+    * include labels 
 
-## `info()`
+* requirements
+  * `--enable-feature=promql-experimental-functions`
+    * Reason:🧠experimental feature🧠
+    * [feature flag](../feature_flags.md#experimental-promql-functions)
 
-_The `info` function is an experiment to improve UX
-around including labels from [info metrics](https://grafana.com/blog/2021/08/04/how-to-use-promql-joins-for-more-effective-queries-of-prometheus-metrics-at-scale/#info-metrics).
-The behavior of this function may change in future versions of Prometheus,
-including its removal from PromQL. `info` has to be enabled via the
-[feature flag](../feature_flags.md#experimental-promql-functions) `--enable-feature=promql-experimental-functions`._
+* 's inputs
+  * `[data-label-selector instant-vector]`
+    * OPTIONAL
+    * filter by labels
+    * `{label1, ...}`
+  * `v instant-vector`
+    * ❌NOT real instant vector❌ 
 
-`info(v instant-vector, [data-label-selector instant-vector])` finds, for each time
-series in `v`, all info series with matching _identifying_ labels (more on
-this later), and adds the union of their _data_ (i.e., non-identifying) labels
-to the time series. The second argument `data-label-selector` is optional.
-It is not a real instant vector, but uses a subset of its syntax.
-It must start and end with curly braces (`{ ... }`) and may only contain label matchers.
-The label matchers are used to constrain which info series to consider
-and which data labels to add to `v`.
+* 's return
+  * ALL info series / EACH `v` time series & matching `[data-label-selector instant-vector]`
+
+* TODO:
 
 Identifying labels of an info series are the subset of labels that uniquely
 identify the info series. The remaining labels are considered
@@ -540,12 +557,15 @@ But to add data labels from an info metric, the user has to use elaborate
 identifying labels are (`on (job, instance)`), and which data labels to add
 (`group_left (k8s_cluster_name)`).
 
-This query is not only verbose and hard to write, it might also run into an “identity crisis”:
-If any of the data labels of `target_info` changes, Prometheus sees that as a change of series
-(as alluded to above, Prometheus just has no native concept of non-identifying labels).
+
 If the old `target_info` series is not properly marked as stale (which can happen with certain ingestion paths),
 the query above will fail for up to 5m (the lookback delta) because it will find a conflicting
 match with both the old and the new version of `target_info`.
+
+* vs `metric_info`
+  * easier to write
+  * avoid “identity crisis” | change data labels
+    * Reason:🧠Prometheus gets as change of series🧠
 
 The `info` function not only resolves this conflict in favor of the newer series, it also simplifies the syntax
 because it knows about the available info series and what their identifying labels are. The example query
@@ -585,36 +605,33 @@ At the current stage, this is an experiment to find out how useful the approach
 turns out to be in practice. A final version of the `info` function will indeed
 consider all matching info series and with their appropriate identifying labels.
 
-## `irate()`
+## `irate(v range-vector)`
 
-`irate(v range-vector)` calculates the per-second instant rate of increase of
-the time series in the range vector. This is based on the last two data points.
-Breaks in monotonicity (such as counter resets due to target restarts) are
-automatically adjusted for. Both samples must be either float samples or
-histogram samples. Elements in `v` where one of the last two samples is a float
-sample and the other is a histogram sample will be omitted from the result
-vector, flagged by a warn-level annotation.
+* 's return
+  * rate of increase of time series | range-vector / second
+    * ⚠️-- based on -- last 2 data point⚠️
+      * != `rate`
+      * if samples are float & histogram -> 1 of those is omitted | result vector
+    * ⚠️if there is a break in monotonicity (_Example:_ counter resets -- due to -- target restarts) -> AUTOMATICALLY adjusted for⚠️
 
-`irate` should only be used with counters (for both floats and histograms).
+* ALLOWED data samples
+  * float samples
+  * histogram samples
 
-The following example expression returns the per-second rate of HTTP requests
-looking up to 5 minutes back for the two most recent data points, per time
-series in the range vector:
+* uses | 
+  * counters
+    * BOTH floats & histograms
 
-```
-irate(http_requests_total{job="api-server"}[5m])
-```
+* use cases
+  * fast-moving counters
+    * Reason:🧠ONLY takes LAST 2 data points🧠
 
-`irate` should only be used when graphing volatile, fast-moving counters.
-Use `rate` for alerts and slow-moving counters, as brief changes
-in the rate can reset the `FOR` clause and graphs consisting entirely of rare
-spikes are hard to read.
-
-Note that when combining `irate()` with an
-[aggregation operator](operators.md#aggregation-operators) (e.g. `sum()`)
-or a function aggregating over time (any function ending in `_over_time`),
-always take a `irate()` first, then aggregate. Otherwise `irate()` cannot detect
-counter resets when your target restarts.
+* `irate()` + aggregation operator OR function aggregating over time
+  * 's operation order
+    * `irate()`
+      * 👀FIRSTLY👀
+      * Reason:🧠Otherwise | restart your target, `irate()` can NOT detect counter resets 🧠
+    * aggregate
 
 ## `label_join()`
 
@@ -703,35 +720,33 @@ ignored entirely. For elements that contain a mix of float and histogram
 samples, only the float samples are used as input, which is flagged by an
 info-level annotation.
 
-## `rate()`
+## `rate(v range-vector)`
 
-`rate(v range-vector)` calculates the per-second average rate of increase of the
-time series in the range vector. Breaks in monotonicity (such as counter
-resets due to target restarts) are automatically adjusted for. Also, the
-calculation extrapolates to the ends of the time range, allowing for missed
-scrapes or imperfect alignment of scrape cycles with the range's time period.
+* 's return
+  * average rate of increase of the time series | range vector / second
+    * ⚠️if there is a break in monotonicity (_Example:_ counter resets -- due to -- target restarts) -> AUTOMATICALLY adjusted for⚠️
+    * if there are NO scrapes | end of time range -> extrapolates | ends of the time range
 
-The following example expression returns the per-second average rate of HTTP requests
-over the last 5 minutes, per time series in the range vector:
+* uses | 
+  * counters
+    * BOTH floats & histograms
+      * | histograms samples, calculate a new histogram /
+        * EACH component (`_sum`, `_count`, `_bucket`) == rate of increase | [first native histogram, last native histogram]
+      * if there are `v`'s elements / have float samples + native histograms | range -> omitted | result vector
 
-```
-rate(http_requests_total{job="api-server"}[5m])
-```
+* `rate()` + aggregation operator OR function aggregating over time
+  * 's operation order
+    * `rate()` 
+      * 👀FIRSTLY👀
+      * Reason:🧠Otherwise `rate()` can NOT detect counter resets | restart your target🧠
+    * aggregate 
 
-`rate` acts on native histograms by calculating a new histogram where each
-component (sum and count of observations, buckets) is the rate of increase
-between the respective component in the first and last native histogram in `v`.
-However, each element in `v` that contains a mix of float and native histogram
-samples within the range, will be omitted from the result vector, flagged by a
-warn-level annotation.
-
-`rate` should only be used with counters (for both floats and histograms). It
-is best suited for alerting, and for graphing of slow-moving counters.
-
-Note that when combining `rate()` with an aggregation operator (e.g. `sum()`)
-or a function aggregating over time (any function ending in `_over_time`),
-always take a `rate()` first, then aggregate. Otherwise `rate()` cannot detect
-counter resets when your target restarts.
+* use cases
+  * slow-moving counters
+    * Reason: 🧠calculate the average🧠
+  * recording rules
+    * Reason:🧠track / second
+      * vs `increase(v range-vector)`🧠
 
 ## `resets()`
 
@@ -751,13 +766,22 @@ reset. A counter histogram sample followed by a gauge histogram sample, or vice
 versa, also counts as a reset (but note that `resets` should not be used on
 gauges in the first place, see above).
 
-## `round()`
+## `round(v instant-vector, [to_nearest=1 scalar])`
 
-`round(v instant-vector, to_nearest=1 scalar)` rounds the sample values of all
-elements in `v` to the nearest integer. Ties are resolved by rounding up. The
-optional `to_nearest` argument allows specifying the nearest multiple to which
-the sample values should be rounded. This multiple may also be a fraction.
-Histogram samples in the input vector are ignored silently.
+* 's input
+  * `v instant-vector`
+    * if there are histogram samples -> are ignored 
+  * `[to_nearest=1 scalar]`
+    * OPTIONAL
+      * by default 1 == unit
+    * == the nearest multiple | the sample values should be rounded
+    * ALLOWED values
+      * integer
+      * decimal
+
+* 's return
+  * `v`'s ALL elements -- to -- the nearest integer
+    * if there are ties -> round up
 
 ## `scalar()`
 
@@ -817,15 +841,24 @@ Same as `sort_by_label`, but sorts in descending order.
 
 ## `time()`
 
-`time()` returns the number of seconds since January 1, 1970 UTC. Note that
-this does not actually return the current time, but the time at which the
-expression is to be evaluated.
+* 's return
+  * | execute the PromQL expression, number of seconds [January 1, 1970 UTC, right now]
 
-## `timestamp()`
+* uses
+  * process uptime
+  * calculations -- based on -- time
 
-`timestamp(v instant-vector)` returns the timestamp of each of the samples of
-the given vector as the number of seconds since January 1, 1970 UTC. It acts on
-float and histogram samples in the same way.
+## `timestamp(v instant-vector)`
+
+* 's input
+  * ALLOWED | 
+    * float samples
+    * histogram samples
+* 's return
+  * vector's sample's timestamp / specified -- as -- number of seconds since January 1, 1970 UTC
+
+* uses
+  * calculations -- based on -- time
 
 ## `vector()`
 
@@ -839,35 +872,55 @@ times in UTC. Histogram samples in the input vector are ignored silently.
 
 ## `<aggregation>_over_time()`
 
-The following functions allow aggregating each series of a given range vector
-over time and return an instant vector with per-series aggregation results:
+* allows
+  * from range vector -> gets an instant vector
 
-* `avg_over_time(range-vector)`: the average value of all float or histogram samples in the specified interval (see details below).
-* `min_over_time(range-vector)`: the minimum value of all float samples in the specified interval.
-* `max_over_time(range-vector)`: the maximum value of all float samples in the specified interval.
-* `sum_over_time(range-vector)`: the sum of all float or histogram samples in the specified interval (see details below).
-* `count_over_time(range-vector)`: the count of all samples in the specified interval.
-* `quantile_over_time(scalar, range-vector)`: the φ-quantile (0 ≤ φ ≤ 1) of all float samples in the specified interval.
-* `stddev_over_time(range-vector)`: the population standard deviation of all float samples in the specified interval.
-* `stdvar_over_time(range-vector)`: the population standard variance of all float samples in the specified interval.
-* `last_over_time(range-vector)`: the most recent sample in the specified interval.
-* `present_over_time(range-vector)`: the value 1 for any series in the specified interval.
+* built-in
+  * `avg_over_time(range-vector)`
+    * average -- OF -- ALL float or histogram samples | specified interval
+  * `min_over_time(range-vector)`
+    * minimum value -- OF -- ALL float samples | specified interval
+  * `max_over_time(range-vector)`
+    * maximum value -- OF -- ALL float samples | specified interval
+  * `sum_over_time(range-vector)`
+    * sum -- OF -- ALL float or histogram samples | specified interval 
+  * `count_over_time(range-vector)`
+    * count -- OF -- ALL samples | specified interval
+  * `quantile_over_time(scalar, range-vector)`
+    * φ-quantile (0 ≤ φ ≤ 1) -- OF -- ALL float samples | specified interval
+    * uses
+      * gauge
+    * NOT uses
+      * counter
+        * Reason: 🧠they are cumulative🧠
+  * `stddev_over_time(range-vector)`
+    * TODO: population standard deviation of all float samples in the specified interval.
+  * `stdvar_over_time(range-vector)`
+    * TODO: population standard variance of all float samples in the specified interval.
+  * `last_over_time(range-vector)`
+    * MOST recent sample | specified interval
+  * `present_over_time(range-vector)`
+    * if there are series | specified interval -> returns 1
+      * ALTHOUGH the sample's value == 0 -> return 1
 
-If the [feature flag](../feature_flags.md#experimental-promql-functions)
-`--enable-feature=promql-experimental-functions` is set, the following
-additional functions are available:
-
-* `mad_over_time(range-vector)`: the median absolute deviation of all float
-  samples in the specified interval.
-* `ts_of_min_over_time(range-vector)`: the timestamp of the last float sample
-  that has the minimum value of all float samples in the specified interval.
-* `ts_of_max_over_time(range-vector)`: the timestamp of the last float sample
-  that has the maximum value of all float samples in the specified interval.
-* `ts_of_last_over_time(range-vector)`: the timestamp of last sample in the
-  specified interval.
-* `first_over_time(range-vector)`: the oldest sample in the specified interval.
-* `ts_of_first_over_time(range-vector)`: the timestamp of earliest sample in the
-  specified interval.
+* if it's enabled `--enable-feature=promql-experimental-functions` -> ADDITIONAL functions
+  * `mad_over_time(range-vector)`
+    * the median absolute deviation of all float
+      samples in the specified interval.
+  * `ts_of_min_over_time(range-vector)`
+    * timestamp of the last float sample
+      that has the minimum value of all float samples in the specified interval.
+  * `ts_of_max_over_time(range-vector)`
+    * timestamp of the last float sample
+      that has the maximum value of all float samples in the specified interval.
+  * `ts_of_last_over_time(range-vector)`
+    * timestamp of last sample in the
+      specified interval.
+  * `first_over_time(range-vector)`
+    * oldest sample in the specified interval.
+  * `ts_of_first_over_time(range-vector)`
+    * timestamp of earliest sample in the
+      specified interval.
 
 Note that all values in the specified interval have the same weight in the
 aggregation even if the values are not equally spaced throughout the interval.

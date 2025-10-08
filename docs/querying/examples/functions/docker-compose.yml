@@ -10,7 +10,6 @@ services:
     volumes:
       - prometheus_data:/prometheus
 
-      # 1. 1to1 & 1toMany
       - ./prometheusConfigurationFile.yml:/etc/prometheus/prometheus.yml
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -18,3 +17,14 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--enable-feature=promql-experimental-functions'
+
+  # Spring Boot with Actuator
+  spring-app:
+    image: dancer13/gs-spring-boot-docker-6
+    ports:
+      - "8084:8080"
+    environment:
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info,metrics,prometheus
+      - MANAGEMENT_ENDPOINT_PROMETHEUS_ENABLED=true
+      - MANAGEMENT_ENDPOINT_METRICS_ENABLED=true
+      - MANAGEMENT_METRICS_EXPORT_PROMETHEUS_ENABLED=true

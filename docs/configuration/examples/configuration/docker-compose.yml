@@ -113,7 +113,7 @@ services:
     command:
       - '-nginx.scrape-uri=http://app3:80/nginx_status'
 
-  # Spring Boot con Actuator
+  # Spring Boot with Actuator
   spring-app:
     image: dancer13/gs-spring-boot-docker-6
     ports:
