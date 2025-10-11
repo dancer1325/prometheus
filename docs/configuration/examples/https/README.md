@@ -2,7 +2,7 @@
 * docker
 * tools / generate bcrypt passwords
   * [htpasswd](https://httpd.apache.org/docs/2.4/programs/htpasswd.html)
-    * brew install httpd
+    * `brew install httpd`
 
 # Basic Auth
 * generate bcrypt passwords

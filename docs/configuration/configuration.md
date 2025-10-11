@@ -2989,18 +2989,20 @@ alert_relabel_configs:
 ### `<remote_write>`
 
 ```yaml
-# The URL of the endpoint to send samples to.
+# endpoint URL | send samples to
 url: <string>
 
-# protobuf message to use when writing to the remote write endpoint.
+# uses
+#   remote write endpoint
 #
-# * The `prometheus.WriteRequest` represents the message introduced in Remote Write 1.0, which
-# will be deprecated eventually.
-# * The `io.prometheus.write.v2.Request` was introduced in Remote Write 2.0 and replaces the former,
-# by improving efficiency and sending metadata, created timestamp and native histograms by default.
-#
-# Before changing this value, consult with your remote storage provider (or test) what message it supports.
-# Read more on https://prometheus.io/docs/specs/remote_write_spec_2_0/#io-prometheus-write-v2-request
+#  ALLOWED values
+#   1. `prometheus.WriteRequest`
+#     == Remote Write 1.0's message
+#       deprecated eventually
+#   2. `io.prometheus.write.v2.Request`
+#     == Remote Write 2.0
+#   restricted -- by -- remote storage provider
+# https://prometheus.io/docs/specs/remote_write_spec_2_0/#io-prometheus-write-v2-request
 [ protobuf_message: <prometheus.WriteRequest | io.prometheus.write.v2.Request> | default = prometheus.WriteRequest ]
 
 # Timeout for requests to the remote write endpoint.
@@ -3011,7 +3013,7 @@ url: <string>
 headers:
   [ <string>: <string> ... ]
 
-# List of remote write relabel configurations.
+# remote write relabel configurations.
 write_relabel_configs:
   [ - <relabel_config> ... ]
 
@@ -3141,7 +3143,7 @@ metadata_config:
     * AFTER external labels
   * uses
     * limit the samples / are sent
-* _Example:_ [how to use](/documentation/examples/remote_storage)
+* _Example:_ [how to use](/prometheus/documentation/examples/remote_storage)
 * [integrations / have this feature](https://prometheus.io/docs/operating/integrations/#remote-endpoints-and-storage)
 
 ### `<remote_read>`

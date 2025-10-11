@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+remote_write:
+  # remote write v2.0
+  - url: "http://host.docker.internal:1234/receive"   # prometheus runs | container & adapter | host
+    protobuf_message: "io.prometheus.write.v2.Request"
+
+  # remote write v1.0
+#  - url: "http://localhost:1234/receive"
+#    protobuf_message: "prometheus.WriteRequest"

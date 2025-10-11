@@ -1,0 +1,4 @@
+###
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=prometheus_tsdb_symbol_table_size_bytes
+
+###

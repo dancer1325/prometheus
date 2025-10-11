@@ -20,8 +20,11 @@ sort_rank: 5
   * if series are deleted via the API -> deletion records are stored | separate tombstone files
 
 * CURRENT block for incoming samples
-  * kept in memory
+  * ⚠️kept in memory⚠️
+    * Reason:🧠's speed >> disk memory🧠
   * NOT FULLY persisted
+    * AFTER 2 hours + compact + organize,
+      * it's persisted
   * secured against crashes -- by a -- write-ahead log (WAL)
     * -> | restart Prometheus server, can be replayed 
 
@@ -59,11 +62,15 @@ sort_rank: 5
         └── checkpoint.00000001
             └── 00000000
     ```
-  * [TSDB format](/tsdb/docs/format/README.md)
+  * [TSDB format](/prometheus/tsdb/docs/format/README.md)
 
 * local storage's restriction
   * NOT clustered or replicated
+    * Reason:🧠Prometheus runs as standalone server🧠
     * -> ❌NOT arbitrarily scalable OR durable❌
+    * Solution:💡
+      * [federation](federation.md)
+      * [remote storage](#remote-storage-integrations)💡
 
 * [Snapshots](querying/api.md#snapshot)
   * uses
@@ -71,74 +78,93 @@ sort_rank: 5
 
 * Backups / 
   * WITHOUT snapshots
+    * == 👀ALREADY persisted👀
     * risk
       * lose data / was recorded since the last WAL sync (EACH 2 hours)
   * proper architecture,
     * can retain years of data | local storage
+      ```
+      --storage.tsdb.retention.time=5y
+      --storage.tsdb.retention.size=1TB
+      ```
 
 ### Compaction
 
 * FIRST 2-hour blocks
-  * eventually compacted | longer blocks | background
+  * eventually compacted | larger blocks
 
 * Compaction
-  * == create larger blocks / contain data <= 10% of retention time OR 31 days
-    * _Example:_ if retention is 15 days -> 10% of 15 days = 1.5 days   == blocks / contain 1.5 days
+  * == 👀create larger blocks / contain data <= 10% of retention time OR 31 days👀
+    * _Example:_ if retention is 15 days -> 10% of 15 days = 1.5 days -> blocks / contain 1.5 days
+    * -> 
+      * less files
+      * better compression
+      * faster queries
 
 ### Operational aspects
 
 * Prometheus's local storage flags
   - `--storage.tsdb.path`
     - path | Prometheus writes its database
-    - by default, to `data/`
+    - by default, | `data/`
   - `--storage.tsdb.retention.time`
     - == how long to retain samples | storage
-    - If neither
-      this flag nor `storage.tsdb.retention.size` is set, the retention time defaults to
-      `15d`. Supported units: y, w, d, h, m, s, ms.
-  - `--storage.tsdb.retention.size`: The maximum number of bytes of storage blocks to retain.
-    The oldest data will be removed first. Defaults to `0` or disabled. Units supported:
-    B, KB, MB, GB, TB, PB, EB. Ex: "512MB". Based on powers-of-2, so 1KB is 1024B. Only
-    the persistent blocks are deleted to honor this retention although WAL and m-mapped
-    chunks are counted in the total size. So the minimum requirement for the disk is the
-    peak space taken by the `wal` (the WAL and Checkpoint) and `chunks_head`
-    (m-mapped Head chunks) directory combined (peaks every 2 hours).
-  - `--storage.tsdb.wal-compression`: Enables compression of the write-ahead log (WAL).
-    Depending on your data, you can expect the WAL size to be halved with little extra
-    cpu load. This flag was introduced in 2.11.0 and enabled by default in 2.20.0.
-    Note that once enabled, downgrading Prometheus to a version below 2.11.0 will
-    require deleting the WAL.
+    - if NOT specified this flag NOR `storage.tsdb.retention.size` -> retention time == `15d`
+    - supported units: y, w, d, h, m, s, ms
+  - `--storage.tsdb.retention.size`
+    - == maximum number of bytes of storage blocks
+      - -- based on -- powers-of-2
+        - _Example:_ 1KB == 1024B
+      - == 💡desired retention + WAL + chunks_head💡
+        - Reason:🧠WAL & chunks_head are NEVER deleted AUTOMATICALLY🧠 
+      - the oldest persistent data will be removed FIRST
+    - by default, `0` OR disabled
+    - supported units: B, KB, MB, GB, TB, PB, EB
+  - `--storage.tsdb.wal-compression`
+    - enables compression of WAL
+    - -> halve WAL size
+      - Reason:🧠remove duplications🧠
+    - little extra cpu load impact
+    - | Prometheus
+      - v2.11.0,
+        - introduced
+        - if you want to use SUDDENLY lower version -> you need to delete WAL 
+      - v2.20.0,
+        - enabled by default 
 
-Prometheus stores an average of only 1-2 bytes per sample. Thus, to plan the
-capacity of a Prometheus server, you can use the rough formula:
+* Prometheus
+  * sample's size == 1-2 bytes
+  * server required disk space formula
 
-```
-needed_disk_space = retention_time_seconds * ingested_samples_per_second * bytes_per_sample
-```
+    ```
+    needed_disk_space = retention_time_seconds * ingested_samples_per_second * bytes_per_sample
+    
+    # retention_time_seconds == how long to retain data
+    ```
+    * ingested_samples_per_second
+      * ways to lower
+        * reduce the number of time series / you scrape
+        * increase the scrape interval
 
-To lower the rate of ingested samples, you can either reduce the number of
-time series you scrape (fewer targets or fewer series per target), or you
-can increase the scrape interval. However, reducing the number of series is
-likely more effective, due to compression of samples within a series.
+* if your local storage becomes corrupted / Prometheus does NOT start
+  * ALTERNATIVES
+    * backup the storage directory & restore the corrupted block directories -- from -- your backups
+    * if you do NOT have backups -> remove the corrupted files (individual block directories, WAL)
 
-If your local storage becomes corrupted to the point where Prometheus will not
-start it is recommended to backup the storage directory and restore the
-corrupted block directories from your backups. If you do not have backups the
-last resort is to remove the corrupted files. For example you can try removing
-individual block directories or the write-ahead-log (wal) files. Note that this
-means losing the data for the time range those blocks or wal covers.
+* filesystems / for Prometheus' local storage
+  * NOT supported
+    * Non-POSIX compliant filesystems
+      * Reason:🧠unrecoverable corruptions may happen🧠
+    * NFS filesystems (including AWS's EFS)
+      * Reason:🧠MOST implementations are NOT POSIX-compliant🧠
+  * supported
+    * POSIX compliant filesystems
 
-CAUTION: Non-POSIX compliant filesystems are not supported for Prometheus'
-local storage as unrecoverable corruptions may happen. NFS filesystems
-(including AWS's EFS) are not supported. NFS could be POSIX-compliant,
-but most implementations are not. It is strongly recommended to use a
-local filesystem for reliability.
+* if `--storage.tsdb.retention.time` `--storage.tsdb.retention.size` are specified -> whichever triggers FIRST is used
 
-If both time and size retention policies are specified, whichever triggers first
-will be used.
-
-Expired block cleanup happens in the background. It may take up to two hours
-to remove expired blocks. Blocks must be fully expired before they are removed.
+* Expired block cleanup
+  * removed | background
+    * may take <= 2 hours
 
 ### Right-Sizing Retention Size
 
@@ -155,7 +181,7 @@ will be removed prior to hitting any disk limitations.
 ## Remote storage integrations
 
 * Prometheus's local storage limitation
-  * 1! node's scalability & durability
+  * ⚠️1! node's scalability & durability⚠️
     * 1! 
       * != distributed storage
       * != clustered storage
@@ -164,29 +190,40 @@ will be removed prior to hitting any disk limitations.
 
 * ways / Prometheus integrates with remote storage systems
   - Prometheus write samples / it ingests | remote URL -- via -- [Remote Write format](https://prometheus.io/docs/specs/remote_write_spec_2_0/)
-  - Prometheus receive OTHER clients' samples -- via -- [Remote Write format](https://prometheus.io/docs/specs/remote_write_spec_2_0/)
-  - Prometheus read (back) sample data from a remote URL -- via -- [Remote Read format](https://github.com/prometheus/prometheus/blob/main/prompb/remote.proto#L31)
-  - Prometheus return sample data / requested by clients -- via -- [Remote Read format](https://github.com/prometheus/prometheus/blob/main/prompb/remote.proto#L31)
+    - [remote write](configuration/configuration.md#remote_write)
 
-![Remote read and write architecture](images/remote_integrations.png)
+      ![](images/remote_write.png)  
+
+  - Prometheus receive OTHER clients' samples -- via -- [Remote Write format](https://prometheus.io/docs/specs/remote_write_spec_2_0/)
+    - `--web.enable-remote-write-receiver` 
+    - Prometheus' receiver endpoint: /api/v1/write
+
+      ![](images/receive.png)
+
+  - Prometheus read (back) sample data from a remote URL -- via -- [Remote Read format](https://github.com/prometheus/prometheus/blob/main/prompb/remote.proto#L31)
+    - [remote read](configuration/configuration.md#remote_read)
+
+      ![](images/remote_read.png)
+
+  - Prometheus return sample data / requested by clients -- via -- [Remote Read format](https://github.com/prometheus/prometheus/blob/main/prompb/remote.proto#L31)
+    - Prometheus' receiver endpoint: /api/v1/read
+
+      ![](images/serve.png)
+
+* architecture
+
+  ![Remote read and write architecture](images/remote_integrations.png)
 
 * remote read & write protocols
   * use a snappy-compressed protocol buffer encoding -- over -- HTTP
   * read protocol
-    * NOT YET stable
+    * ❌NOT YET stable❌
     * ⚠️ONLY fetches raw series data / set of label selectors & time ranges⚠️
       * ALL PromQL evaluation happens | Prometheus
       * -> ⚠️scalability limit⚠️
   * write protocol
     * [| 1.0v, stable specification](https://prometheus.io/docs/specs/remote_write_spec/)
     * [| 2.0v, experimental specification](https://prometheus.io/docs/specs/remote_write_spec_2_0/)
-
-* | Prometheus server,
-  * how to configure
-    * [remote write](configuration/configuration.md#remote_write)
-    * [remote read](configuration/configuration.md#remote_read)
-
-* if you want to enable the remote write receiver -> CL's flag `--web.enable-remote-write-receiver`
 
 * `/api/v1/write`
   * remote write receiver endpoint
