@@ -1,0 +1,2 @@
+### GET request to example server
+POST {{PROMETHEUS_SERVER_HOST}}/api/v1/admin/tsdb/snapshot

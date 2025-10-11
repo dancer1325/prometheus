@@ -1,0 +1,9 @@
+### 1. GET -- 405
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/read
+
+### 2. POST
+POST {{PROMETHEUS_SERVER_HOST}}/api/v1/read
+Content-Type: application/x-protobuf
+Content-Encoding: snappy
+
+< readrequest.pb

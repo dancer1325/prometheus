@@ -1352,33 +1352,24 @@ NOTE: This endpoint is available before the server has been marked ready and is 
 These are APIs that expose database functionalities for the advanced user. These APIs are not enabled unless the `--web.enable-admin-api` is set.
 
 ### Snapshot
-Snapshot creates a snapshot of all current data into `snapshots/<datetime>-<rand>` under the TSDB's data directory and returns the directory as response.
-It will optionally skip snapshotting data that is only present in the head block, and which has not yet been compacted to disk.
+
+* snapshot OF ALL current data | TSDB's data directory's `snapshots/<datetime>-<rand>`
+  * 's response
+    * the directory
 
 ```
+# | Prometheus v2.1
 POST /api/v1/admin/tsdb/snapshot
+
+# | Prometheus v2.9
 PUT /api/v1/admin/tsdb/snapshot
 ```
 
 URL query parameters:
 
-- `skip_head=<bool>`: Skip data present in the head block. Optional.
-
-```bash
-curl -XPOST http://localhost:9090/api/v1/admin/tsdb/snapshot
-```
-
-```json
-{
-  "status": "success",
-  "data": {
-    "name": "20171210T211224Z-2be650b6d019eb54"
-  }
-}
-```
-The snapshot now exists at `<data-dir>/snapshots/20171210T211224Z-2be650b6d019eb54`
-
-*New in v2.1 and supports PUT from v2.9*
+- `skip_head=<bool>`
+  - skip data / present | head block
+  - OPTIONAL
 
 ### Delete Series
 DeleteSeries deletes data for a selection of series in a time range. The actual data still exists on disk and is cleaned up in future compactions or can be explicitly cleaned up by hitting the [Clean Tombstones](#clean-tombstones) endpoint.
