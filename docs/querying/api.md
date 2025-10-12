@@ -173,38 +173,30 @@ sort_rank: 7
 
 ## Formatting query expressions
 
-The following endpoint formats a PromQL expression in a prettified way:
+* endpoint /
+  * PromQL expression is formated -- in a -- prettified way
+* syntax
+  ```
+  GET /api/v1/format_query
+  POST /api/v1/format_query
+  ```
 
-```
-GET /api/v1/format_query
-POST /api/v1/format_query
-```
+* URL query parameters
+  - `query=<string>`
+    - Prometheus expression query string
 
-URL query parameters:
+* API's response
 
-- `query=<string>`: Prometheus expression query string.
-
-You can URL-encode these parameters directly in the request body by using the `POST` method and
-`Content-Type: application/x-www-form-urlencoded` header. This is useful when specifying a large
-query that may breach server-side URL character limits.
-
-The `data` section of the query result is a string containing the formatted query expression. Note that any comments are removed in the formatted string.
-
-The following example formats the expression `foo/bar`:
-
-```bash
-curl 'http://localhost:9090/api/v1/format_query?query=foo/bar'
-```
-
-```json
-{
-   "status" : "success",
-   "data" : "foo / bar"
-}
-```
+  ```json
+  {
+     "status" : "success",
+     "data" : "stringContainingTheFormattedQueryExpression"
+  }
+  ```
 
 ## Parsing a PromQL expressions into a abstract syntax tree (AST)
 
+* TODO:
 This endpoint is **experimental** and might change in the future. It is currently only meant to be used by Prometheus' own web UI, and the endpoint name and exact format returned may change from one Prometheus version to another. It may also be removed again in case it is no longer needed by the UI.
 
 The following endpoint parses a PromQL expression and returns it as a JSON-formatted AST (abstract syntax tree) representation:
@@ -277,178 +269,138 @@ curl 'http://localhost:9090/api/v1/parse_query?query=foo/bar'
 
 ## Querying metadata
 
-Prometheus offers a set of API endpoints to query metadata about series and their labels.
-
-NOTE: These API endpoints may return metadata for series for which there is no sample within the selected time range, and/or for series whose samples have been marked as deleted via the deletion API endpoint. The exact extent of additionally returned series metadata is an implementation detail that may change in the future.
+* goal
+  * API endpoints / query
+    * series' metadata
+      * ALTHOUGH there are NO samples
+    * series' labels' metadata
 
 ### Finding series by label matchers
 
-The following endpoint returns the list of time series that match a certain label set.
+* allows
+  * getting time series / match a certain label set 
+* syntax
+  ```
+  GET /api/v1/series
+  POST /api/v1/series
+  ```
 
-```
-GET /api/v1/series
-POST /api/v1/series
-```
+* URL query parameters
+  - `match[]=<series_selectorToReturn>`
+    - == 👀repeated series selector argument👀 that selects the series to return
+    - ⚠️\>=1 ⚠️
+  - `start=<rfc3339 | unix_timestamp>`
+    - Start timestamp
+  - `end=<rfc3339 | unix_timestamp>`
+    - End timestamp
+  - `limit=<number>`
+    - MAXIMUM number of returned series
+    - OPTIONAL
+      - if 0 == disabled
 
-URL query parameters:
+* API's response
 
-- `match[]=<series_selector>`: Repeated series selector argument that selects the
-  series to return. At least one `match[]` argument must be provided.
-- `start=<rfc3339 | unix_timestamp>`: Start timestamp.
-- `end=<rfc3339 | unix_timestamp>`: End timestamp.
-- `limit=<number>`: Maximum number of returned series. Optional. 0 means disabled.
+  ```json
+  {
+     "status" : "success",
+     "data" : [
+       {
+         "__name__": "metricName",
+          ...
+       },
+       {
+          ...
+       }
+     ]
+  }
+  ```
 
-You can URL-encode these parameters directly in the request body by using the `POST` method and
-`Content-Type: application/x-www-form-urlencoded` header. This is useful when specifying a large
-or dynamic number of series selectors that may breach server-side URL character limits.
-
-The `data` section of the query result consists of a list of objects that
-contain the label name/value pairs which identify each series.
-
-The following example returns all series that match either of the selectors
-`up` or `process_start_time_seconds{job="prometheus"}`:
-
-```bash
-curl -g 'http://localhost:9090/api/v1/series?' --data-urlencode 'match[]=up' --data-urlencode 'match[]=process_start_time_seconds{job="prometheus"}'
-```
-
-```json
-{
-   "status" : "success",
-   "data" : [
-      {
-         "__name__" : "up",
-         "job" : "prometheus",
-         "instance" : "localhost:9090"
-      },
-      {
-         "__name__" : "up",
-         "job" : "node",
-         "instance" : "localhost:9091"
-      },
-      {
-         "__name__" : "process_start_time_seconds",
-         "job" : "prometheus",
-         "instance" : "localhost:9090"
-      }
-   ]
-}
-```
 
 ### Getting label names
 
-The following endpoint returns a list of label names:
+* allows
+  * getting list of label names
+* syntax
+  ```
+  GET /api/v1/labels
+  POST /api/v1/labels
+  ```
 
-```
-GET /api/v1/labels
-POST /api/v1/labels
-```
+* URL query parameters
+  - `start=<rfc3339 | unix_timestamp>`
+    - Start timestamp
+    - OPTIONAL
+  - `end=<rfc3339 | unix_timestamp>`
+    - End timestamp
+    - OPTIONAL
+  - `match[]=<series_selector>`
+    - == 👀repeated series selector argument👀 / selects the series -- from which -- read the label names
+    - OPTIONAL
+  - `limit=<number>`
+    - MAXIMUM number of returned series
+    - OPTIONAL
+      - if 0 == disabled
 
-URL query parameters:
+* API's response
 
-- `start=<rfc3339 | unix_timestamp>`: Start timestamp. Optional.
-- `end=<rfc3339 | unix_timestamp>`: End timestamp. Optional.
-- `match[]=<series_selector>`: Repeated series selector argument that selects the
-  series from which to read the label names. Optional.
-- `limit=<number>`: Maximum number of returned series. Optional. 0 means disabled.
-
-
-The `data` section of the JSON response is a list of string label names.
-
-Here is an example.
-
-```bash
-curl 'localhost:9090/api/v1/labels'
-```
-
-```json
-{
-    "status": "success",
-    "data": [
-        "__name__",
-        "call",
-        "code",
-        "config",
-        "dialer_name",
-        "endpoint",
-        "event",
-        "goversion",
-        "handler",
-        "instance",
-        "interval",
-        "job",
-        "le",
-        "listener_name",
-        "name",
-        "quantile",
-        "reason",
-        "role",
-        "scrape_job",
-        "slice",
-        "version"
-    ]
-}
-```
+  ```json
+  {
+     "status" : "success",
+     "data" : [
+       "label1",
+       "label2",
+       ...
+     ]
+  }
+  ```
 
 ### Querying label values
 
-The following endpoint returns a list of label values for a provided label name:
+* allows
+  * getting list of label values / provided label name
+* syntax
+  ```
+  GET /api/v1/label/<label_name>/values
+  ```
 
-```
-GET /api/v1/label/<label_name>/values
-```
+* URL query parameters
+  - `start=<rfc3339 | unix_timestamp>`
+    - Start timestamp
+    - OPTIONAL
+  - `end=<rfc3339 | unix_timestamp>`
+    - End timestamp
+    - OPTIONAL
+  - `match[]=<series_selector>`
+    - == 👀repeated series selector argument👀 / selects the series -- from which -- read the label values
+    - OPTIONAL
+  - `limit=<number>`
+    - MAXIMUM number of returned series
+    - OPTIONAL
+      - if 0 == disabled
+* `<label_name>`
+  * if you want -> you can encode -- via -- [Values Escaping method](https://github.com/prometheus/proposals/blob/main/proposals/2023-08-21-utf8.md#text-escaping)
+    * uses
+      * name includes the `/` character
+    * rules
+      * Prepend the label with `U__`.
+      * Letters, numbers, and colons appear as-is.
+      * Convert single underscores to double underscores.
+      * For all other characters, use the UTF-8 codepoint as a hex integer, surrounded
+        by underscores.  So ` ` becomes `_20_` and a `.` becomes `_2e_`.
 
-URL query parameters:
+* API's response
 
-- `start=<rfc3339 | unix_timestamp>`: Start timestamp. Optional.
-- `end=<rfc3339 | unix_timestamp>`: End timestamp. Optional.
-- `match[]=<series_selector>`: Repeated series selector argument that selects the
-  series from which to read the label values. Optional.
-- `limit=<number>`: Maximum number of returned series. Optional. 0 means disabled.
+  ```json
+  {
+     "status" : "success",
+     "data" : [
+       "labelValue1",
+       "labelValue2",
+       ...
+     ]
+  }
+  ```
 
-The `data` section of the JSON response is a list of string label values.
-
-This example queries for all label values for the `http_status_code` label:
-
-```bash
-curl http://localhost:9090/api/v1/label/http_status_code/values
-```
-
-```json
-{
-   "status" : "success",
-   "data" : [
-      "200",
-      "504"
-   ]
-}
-```
-
-Label names can optionally be encoded using the Values Escaping method, and is necessary if a name includes the `/` character. To encode a name in this way:
-
-* Prepend the label with `U__`.
-* Letters, numbers, and colons appear as-is.
-* Convert single underscores to double underscores.
-* For all other characters, use the UTF-8 codepoint as a hex integer, surrounded
-  by underscores.  So ` ` becomes `_20_` and a `.` becomes `_2e_`.
-
- More information about text escaping can be found in the original UTF-8 [Proposal document](https://github.com/prometheus/proposals/blob/main/proposals/2023-08-21-utf8.md#text-escaping).
-
-This example queries for all label values for the `http.status_code` label:
-
-```bash
-curl http://localhost:9090/api/v1/label/U__http_2e_status_code/values
-```
-
-```json
-{
-   "status" : "success",
-   "data" : [
-      "200",
-      "404"
-   ]
-}
-```
 
 ## Querying exemplars
 

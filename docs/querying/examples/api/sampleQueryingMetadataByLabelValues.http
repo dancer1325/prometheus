@@ -1,0 +1,31 @@
+### GET - Valores del label "job"
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/job/values
+
+### GET - Valores del label "instance"
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/instance/values
+
+### GET - Valores del label "__name__" (nombres de métricas)
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/__name__/values
+
+### GET - Valores con rango de tiempo
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/job/values?start=2023-01-01T00:00:00Z&end=2023-01-02T00:00:00Z
+
+### GET - Valores filtrados por series específicas
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/job/values?match[]=up
+
+### GET - Valores con múltiples filtros de series
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/instance/values?match[]=up&match[]=node_cpu_seconds_total
+
+### GET - Valores con límite
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/job/values?limit=5
+
+### GET - Valores completo con todos los parámetros
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/job/values?start=2023-01-01T00:00:00Z&end=2023-01-02T00:00:00Z&match[]=up&match[]=process_start_time_seconds{job="prometheus"}&limit=10
+
+### GET - Valores del label "mode" para métricas de CPU
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/mode/values?match[]=node_cpu_seconds_total
+
+### GET - Valores con timestamps Unix
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/label/job/values?start=1672531200&end=1672617600&limit=3
+
+### TODO: escaping

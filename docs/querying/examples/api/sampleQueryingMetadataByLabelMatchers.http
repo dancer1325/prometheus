@@ -1,0 +1,33 @@
+### 1. GET
+### 1.1 GET - 1! selector
+GET http://localhost:9090/api/v1/series?match[]=up
+
+### 1.2 GET - MULTIPLE selectores
+GET http://localhost:9090/api/v1/series?match[]=up&match[]=process_start_time_seconds{job="prometheus"}
+
+### 1.3 GET - start & end
+GET http://localhost:9090/api/v1/series?match[]=up&start=2025-10-01T00:00:00Z&end=2025-10-12T00:00:00Z
+
+### 1.4 GET - limit
+GET http://localhost:9090/api/v1/series?match[]=prometheus_http_requests_total&limit=10
+
+### 1.5 GET - ALL parameters
+GET http://localhost:9090/api/v1/series?match[]=up&match[]=node_cpu_seconds_total{mode="idle"}&start=2023-01-01T00:00:00Z&end=2023-01-02T00:00:00Z&limit=50
+
+### 2. POST -
+POST http://localhost:9090/api/v1/series
+Content-Type: application/x-www-form-urlencoded
+
+match[]=up
+
+### 2.1 POST - MULTIPLE selectors
+POST http://localhost:9090/api/v1/series
+Content-Type: application/x-www-form-urlencoded
+
+match[]=up&match[]=process_start_time_seconds{job="prometheus"}
+
+### 2.2 POST - ALL parameters
+POST http://localhost:9090/api/v1/series
+Content-Type: application/x-www-form-urlencoded
+
+match[]=up&match[]=node_cpu_seconds_total{mode="idle"}&start=1672531200&end=1672617600&limit=50

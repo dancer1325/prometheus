@@ -25,6 +25,21 @@
 * evaluated | range of time
   * check API's URL parameters `start` & `end`
 
+# Formatting query expressions
+* hit [sampleFormatQueryExpressions.http](sampleFormatQueryExpressions.http)
+
+# Parsing a PromQL expressions into a abstract syntax tree (AST)
+* TODO:
+
+# Querying metadata
+## Finding series by label matchers
+* hit [sampleQueryingMetadataByLabelMatchers.http](sampleQueryingMetadataByLabelMatchers.http)
+## Getting label names
+* hit [sampleQueryingMetadataByLabelNames.http](sampleQueryingMetadataByLabelNames.http)
+## Querying label values
+* hit [sampleQueryingMetadataByLabelValues.http](sampleQueryingMetadataByLabelValues.http)
+
+
 # TODO:
 
 # Expression query result formats
