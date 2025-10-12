@@ -1,5 +1,9 @@
 ### 1. GET
-GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=http_requests_total{job="apiserver"}
+### 1.1 NO result
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=http_requests_total
+### 1.2 result
+GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=prometheus_http_requests_total
+
 
 ### 2. POST
 POST {{PROMETHEUS_SERVER_HOST}}/api/v1/query
