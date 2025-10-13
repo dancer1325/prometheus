@@ -9,11 +9,11 @@
 # how to run locally?
 ## hierarchichal federated Prometheus
 * | root path,
-  * 
+  * TODO:
 
 ## cross-service federated Prometheus
 * | root path,
-  *
+  * TODO:
 
 ## `/federate` endpoint
 * ways

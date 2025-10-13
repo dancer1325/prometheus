@@ -43,10 +43,10 @@ services:
       #- ./prometheusHTTPServiceDiscovery.yml:/etc/prometheus/prometheus.yml
 
       # 1.9 metrics_path
-      #- ./prometheusScrapeConfigMetricsPath.yml:/etc/prometheus/prometheus.yml
+      - ./prometheusScrapeConfigMetricsPath.yml:/etc/prometheus/prometheus.yml
 
       # 1.10 scrape_failure_log_file
-      - ./prometheusScrapeConfigFailureLogFile.yml:/etc/prometheus/prometheus.yml
+      # ./prometheusScrapeConfigFailureLogFile.yml:/etc/prometheus/prometheus.yml
 
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
