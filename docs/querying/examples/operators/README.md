@@ -217,6 +217,16 @@
 * TODO:
 
 ## Aggregation operators
+### allows aggregate 1! instant vector's elements
+* Reason:🧠ALL aggregation operators are -- based on -- using 1! instant vector🧠
+  * `sum(v)`, `avg(v)`, ... 
+### uses
+#### aggregate over ALL label dimensions
+* `sum(prometheus_http_requests_total)`
+  * MULTIPLE series -> 1! float   
+#### preserve distinct dimensions -- by including -- `without` OR `by` 
+* `sum(prometheus_http_requests_total) by (job)`
+
 ### `sum`
 #### `<aggr-op> [without|by (<label list>)] ([parameter,] <vector expression>)`
 * `sum without(job) (up)`
@@ -305,7 +315,6 @@
 
 ### `quantile(φ, v)`
 * `quantile(0.5, prometheus_http_requests_total)`
-* 
 
 # Vector matching
 ## Vector matching keywords

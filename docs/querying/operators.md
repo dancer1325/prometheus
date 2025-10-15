@@ -234,7 +234,7 @@ sort_rank: 2
     * -> new vector OF fewer elements / aggregated values 
     * uses
       * aggregate over ALL label dimensions
-      * preserve distinct dimensions -- by including -- `without` OR `by`
+      * 💡preserve distinct dimensions -- by including -- `without` OR `by`💡
 
         ```
         # BEFORE the expression
