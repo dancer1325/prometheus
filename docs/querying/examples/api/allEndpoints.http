@@ -1,0 +1,24 @@
+### Prometheus API v1 - Todos los endpoints disponibles
+
+### Expression Queries
+GET http://localhost:9090/api/v1/query
+GET http://localhost:9090/api/v1/query_range
+GET http://localhost:9090/api/v1/format_query
+
+### Metadata
+GET http://localhost:9090/api/v1/series
+GET http://localhost:9090/api/v1/labels
+GET http://localhost:9090/api/v1/label/__name__/values
+
+### Status
+GET http://localhost:9090/api/v1/status/config
+GET http://localhost:9090/api/v1/status/flags
+GET http://localhost:9090/api/v1/status/buildinfo
+
+### Targets & Rules
+GET http://localhost:9090/api/v1/targets
+GET http://localhost:9090/api/v1/rules
+
+### Alerts
+GET http://localhost:9090/api/v1/alerts
+GET http://localhost:9090/api/v1/alertmanagers

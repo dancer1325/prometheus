@@ -94,4 +94,3 @@ POST {{PROMETHEUS_SERVER_HOST}}/api/v1/query_range
 Content-Type: application/x-www-form-urlencoded
 
 query=up&start=1757865600&end=1757919000&step=15.0
-

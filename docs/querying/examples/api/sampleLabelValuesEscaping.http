@@ -1,0 +1,29 @@
+### Labels con caracteres especiales - Sin escapar (puede fallar)
+GET http://localhost:9090/api/v1/label/my-label/values
+GET http://localhost:9090/api/v1/label/label.with.dots/values
+GET http://localhost:9090/api/v1/label/label with spaces/values
+
+### Labels con caracteres especiales - Escapados según UTF-8 proposal
+GET http://localhost:9090/api/v1/label/my\x2dlabel/values
+GET http://localhost:9090/api/v1/label/label\x2ewith\x2edots/values
+GET http://localhost:9090/api/v1/label/label\x20with\x20spaces/values
+
+### Labels con caracteres Unicode - Escapados
+GET http://localhost:9090/api/v1/label/métrica\x5fañó/values
+GET http://localhost:9090/api/v1/label/测试\x5flabel/values
+
+### Labels con caracteres de control - Escapados
+GET http://localhost:9090/api/v1/label/label\x0awith\x0anewlines/values
+GET http://localhost:9090/api/v1/label/label\x09with\x09tabs/values
+
+### Comparación URL encoding vs Text escaping
+# URL encoding (método tradicional)
+GET http://localhost:9090/api/v1/label/my%2Dlabel/values
+GET http://localhost:9090/api/v1/label/label%2Ewith%2Edots/values
+
+# Text escaping (método nuevo UTF-8)
+GET http://localhost:9090/api/v1/label/my\x2dlabel/values
+GET http://localhost:9090/api/v1/label/label\x2ewith\x2edots/values
+
+### Casos complejos con filtros
+GET http://localhost:9090/api/v1/label/my\x2dlabel/values?match[]=up&match[]=node_cpu_seconds_total

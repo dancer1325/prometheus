@@ -1,0 +1,35 @@
+### 1. GET
+### GET - ALL labels
+GET http://localhost:9090/api/v1/labels
+
+### GET - range time
+GET http://localhost:9090/api/v1/labels?start=2023-01-01T00:00:00Z&end=2023-01-02T00:00:00Z
+
+### GET - series' labels
+GET http://localhost:9090/api/v1/labels?match[]=up
+
+### GET - MULTIPLE series filters
+GET http://localhost:9090/api/v1/labels?match[]=up&match[]=node_cpu_seconds_total
+
+### GET - limit
+GET http://localhost:9090/api/v1/labels?limit=10
+
+### GET - Labels completo con todos los parámetros
+GET http://localhost:9090/api/v1/labels?start=2023-01-01T00:00:00Z&end=2023-01-02T00:00:00Z&match[]=up&match[]=process_start_time_seconds{job="prometheus"}&limit=20
+
+### 2. POST
+### ALL labels
+POST http://localhost:9090/api/v1/labels
+Content-Type: application/x-www-form-urlencoded
+
+### POST - Labels con filtros de series
+POST http://localhost:9090/api/v1/labels
+Content-Type: application/x-www-form-urlencoded
+
+match[]=up&match[]=node_cpu_seconds_total
+
+### POST - Labels completo con timestamps Unix
+POST http://localhost:9090/api/v1/labels
+Content-Type: application/x-www-form-urlencoded
+
+start=1672531200&end=1672617600&match[]=up&limit=15

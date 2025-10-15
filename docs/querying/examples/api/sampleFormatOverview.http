@@ -10,7 +10,8 @@ GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=nonexistent_function(up)
 ### 1.1.2.3 errorType - Timeout
 GET {{PROMETHEUS_SERVER_HOST}}/api/v1/query?query=up&timeout=1ns
 ### 1.1.3 warnings
-## TODO: NOT got | default Prometheus config
+### 1.4 GET - limit
+GET http://localhost:9090/api/v1/series?match[]=prometheus_http_requests_total&limit=10
 ### 1.1.4 infos
 ## TODO: NOT got | default Prometheus config
 
