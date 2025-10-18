@@ -41,20 +41,12 @@ sort_rank: 3
         * longer additional information
           * _Example:_ alert descriptions or runbook links
 
-![](/grafana/media/docs/alerting/alert-rule-evaluation-2.png)
-
 ## Inspecting alerts | runtime
 
-* | pending & firing alerts,
-  * Prometheus ALSO stores synthetic time series
+* 👀if there are pending & firing alerts -> Prometheus stores synthetic time series👀
     ```
     ALERTS{alertname="<alert name>", alertstate="<pending or firing>", <additional alert labels>}
     ```
-  
-* TODO: SAMPLE value == `1`
-  * as long as the alert is in the indicated active
-    (pending or firing) state, & series is marked stale when this is no
-    longer the case.
 
 ## Sending alert notifications
 

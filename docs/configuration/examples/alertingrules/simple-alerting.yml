@@ -1,15 +1,55 @@
 groups:
-  - name: example
+  # alert group 1
+  - name: prometheus-monitoring
     labels:
-      team: myteam
-      #team: teamsecond     # NOT valid, because this label ALREADY exist
+      alerting: prometheus
     rules:
-      - alert: HighRequestLatency
-        expr: job:request_latency_seconds:mean5m{job="myjob"} > 0.5
-        for: 10m    # this expression MUST be hit during 10m CONSECUTIVELY -- to -- trigger the notification
-        keep_firing_for: 5m
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
         labels:
-          severity: page
-          team: myteamoverwritten     # overwrite the groups.labels
+          severity: critical
+          alerting: prometheus-down
         annotations:
-          summary: High request latency
+          summary: "Prometheus instance is down"
+          description: "Prometheus {{ $labels.instance }} has been down for more than 1 minute"
+
+      # test fire
+      - alert: PrometheusHighMemoryUsage
+        expr: (process_resident_memory_bytes{job="prometheus"} / 1024 / 1024) > 10
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus high memory usage"
+          description: "Prometheus {{ $labels.instance }} is using {{ $value }}MB of memory"
+
+      - alert: PrometheusTooManyRestarts
+        expr: changes(process_start_time_seconds{job="prometheus"}[15m]) > 2
+        # for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus too many restarts"
+          description: "Prometheus {{ $labels.instance }} has restarted more than twice in the last 15 minutes"
+
+  # alert group 2
+  - name: alertmanager-monitoring
+    rules:
+      - alert: AlertmanagerDown
+        expr: up{job="alertmanager"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Alertmanager instance is down"
+          description: "Alertmanager {{ $labels.instance }} has been down for more than 1 minute"
+
+      - alert: AlertmanagerConfigurationReloadFailure
+        expr: alertmanager_config_last_reload_successful{job="alertmanager"} == 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Alertmanager configuration reload failure"
+          description: "Alertmanager {{ $labels.instance }} configuration reload error"

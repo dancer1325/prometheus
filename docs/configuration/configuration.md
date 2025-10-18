@@ -156,7 +156,7 @@ sort_rank: 1
     scrape_configs:
       [ - <scrape_config> ... ]
     
-    # Alerting specifies settings related to the Alertmanager.
+    # Alertmanager settings
     alerting:
       alert_relabel_configs:
         [ - <relabel_config> ... ]
