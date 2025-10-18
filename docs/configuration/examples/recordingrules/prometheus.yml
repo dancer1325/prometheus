@@ -3,7 +3,7 @@ global:
   evaluation_interval: 20s    # evaluate the rules EACH 30"
 
 rule_files:
-  - "simple_rulefile.yaml"      # include the SEPARATED Prometheus' rule | Prometheuse
+  - "simple_rulefile.yml"      # include the SEPARATED Prometheus' rule | Prometheuse
 
 scrape_configs:
   - job_name: 'prometheus'

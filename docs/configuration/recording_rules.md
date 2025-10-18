@@ -23,12 +23,11 @@ sort_rank: 2
     * include them | Prometheus -> [Prometheus configuration](configuration.md)'s `rule_files` field👀
     * reload them | runtime -> send `SIGHUP` | Prometheus process👀
 
-* rule group
+* alert rule group
   * == MULTIPLE rules /
     * run SEQUENTIALLY | regular interval
     * 👀SAME evaluation time 👀
-      * == | evaluate a rule,
-        * ALL rules use the SAME timestamp
+      * == | evaluate a rule, ALL rules use the SAME timestamp
 
 ## Syntax-checking rules
 
@@ -57,7 +56,7 @@ sort_rank: 2
     * 💡about frequently needed OR computationally expensive expressions💡
       * precompute 
         * -> | query, MUST faster
-      * save their result -- as a -- NEW set of time series
+      * save their result -- as a -- 👀NEW set of time series👀
   * uses
     * dashboards
       * Reason: 🧠query the SAME expression REPEATEDLY / EACH refresh🧠

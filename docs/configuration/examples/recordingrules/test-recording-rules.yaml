@@ -10,7 +10,6 @@ groups:
         labels:
           metric_type: precomputed
 
-
       # Recording rule: Complex aggregation
       - record: job:http_request_rate:5m
         expr: |
