@@ -117,8 +117,7 @@ rules:
     # pending/firing alerts.
     expr: <string>
     
-    # Alerts are considered firing once they have been returned for this long.
-    # Alerts which have not yet fired for long enough are considered pending.
+    # time / alerts MUST be status pending BEFORE switching to firing
     [ for: <duration> | default = 0s ]
     
     # How long an alert will continue firing after the condition that triggered it

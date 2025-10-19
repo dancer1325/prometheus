@@ -53,3 +53,15 @@ groups:
         annotations:
           summary: "Alertmanager configuration reload failure"
           description: "Alertmanager {{ $labels.instance }} configuration reload error"
+
+
+  - name: prometheus-different-to-zero
+    rules:
+      - alert: PrometheusDifferentToZero
+        expr: rate(prometheus_http_requests_total[5m]) != 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus different to 0"
+          description: "Prometheus {{ $labels.instance }} is receiving requests"

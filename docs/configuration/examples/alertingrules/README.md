@@ -24,7 +24,16 @@
 ##### OPTIONAL
 * http://localhost:9090/alerts > NONE have it
 
-
 ## if there are pending & firing alerts -> Prometheus stores synthetic time series
 * http://localhost:9090/query
   * `ALERTS`
+
+
+## >= 1 alert instance / alert rule
+* http://localhost:9090/alerts
+  * PrometheusDifferentToZero
+    * MULTIPLE alert instanceS / 1 alert rule
+* http://localhost:9093/#/alerts
+  * PrometheusDifferentToZero
+    * MULTIPLE alert instanceS / 1 alert rule
+    
