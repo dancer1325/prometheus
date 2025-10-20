@@ -3,18 +3,18 @@ groups:
     interval: 30s
     rules:
       # Recording rule: Pre-compute expensive
-      - record: handler:http_latency_ratio:5m
+      - record: handler:http_latency_ratio:2m
         expr: |
-          histogram_quantile(0.95, sum(rate(prometheus_http_request_duration_seconds_bucket[5m])) by (le, handler)) / 
-          avg(rate(prometheus_http_requests_total[5m])) by (handler)
+          histogram_quantile(0.95, sum(rate(prometheus_http_request_duration_seconds_bucket[2m])) by (le, handler)) / 
+          avg(rate(prometheus_http_requests_total[2m])) by (handler)
         labels:
           metric_type: precomputed
 
       # Recording rule: Complex aggregation
-      - record: job:http_request_rate:5m
+      - record: job:http_request_rate:2m
         expr: |
           sum by (job) (
-            rate(prometheus_http_requests_total[5m])
+            rate(prometheus_http_requests_total[2m])
           ) / 
           count by (job) (
             up{job=~"prometheus|node"}

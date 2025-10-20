@@ -55,9 +55,13 @@
   * check the rules
 * TODO: how to check ?
 ## save their result -- as a -- NEW set of time series
+* hit some times http://localhost:9090/metrics & wait a couple of minutes
 * http://localhost:9090/query
   * `handler:http_latency_ratio:5m`
   * `job:http_request_rate:5m`
+* http://localhost:9090/alerts
+  * empty
+    * Reason:🧠ONLY for alert rules, NOT recording rules🧠
 ## restrictions: 's names valid metric names
 * TODO:
 

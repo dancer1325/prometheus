@@ -54,7 +54,6 @@ groups:
           summary: "Alertmanager configuration reload failure"
           description: "Alertmanager {{ $labels.instance }} configuration reload error"
 
-
   - name: prometheus-different-to-zero
     rules:
       - alert: PrometheusDifferentToZero
